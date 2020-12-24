@@ -1,12 +1,18 @@
 package edu.bjut.agg.Shamir;
 
 import java.math.BigInteger;
+<<<<<<< HEAD
 import java.security.SecureRandom;
+=======
+>>>>>>> init
 import java.util.Random;
 
 import it.unisa.dia.gas.jpbc.Element;
 import it.unisa.dia.gas.jpbc.Pairing;
+<<<<<<< HEAD
 import it.unisa.dia.gas.plaf.jpbc.pairing.PairingFactory;
+=======
+>>>>>>> init
 
 public final class Shamir {
 	public static SecretShareBigInteger[] split(final BigInteger secret, int needed, int available, BigInteger prime,
