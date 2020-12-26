@@ -1,6 +1,5 @@
 package edu.bjut.app;
 
-import java.math.BigInteger;
 import java.util.ArrayList;
 
 import edu.bjut.entity.MessageKeys;
@@ -24,6 +23,7 @@ public class App
         ArrayList<User> users = new ArrayList<User>();
         for (int i = 0; i < Params.PARTICIPANT_NUM ; ++i) users.add(new User());
 
+        // round 0
         System.out.println( "Round 0: Initialization" );
         // key distribution
         for (User u: users) {
@@ -37,17 +37,34 @@ public class App
         // server broadcast
         server.broadcastTo(users);
         
+        // round 1
         System.out.println( "Round 1: Key Sharing" );
-        // generate Beta and Pnm
+        // user generate Beta and Pnm
         for (User u: users) {
             server.appendMessagePNM(u.genMsgPNMs());
         } 
-        server.recoverSecret(0);
-        // server.broadcastToPMN(users);
-        BigInteger result = BigInteger.ZERO;
-        for (User u: users) {
-           result = result.add(u.genEncGradient());
+        server.broadcastToPMN(users);
+
+        // round 2
+        System.out.println( "Round 2: Masked Input" );
+        // user caculate gradient x_n_hat and send to server;
+        // TODO send verify additionnal information
+        for (User u : users) {
+            server.appendMessageSigma(u.genMessageSigma());
         }
-        System.out.println(result);
+        // server broadcast id list
+        server.broadcastToIds(users);
+
+        // round 3
+        System.out.println( "Round 3: Unmasking" );
+        // TODO process dropout users;
+
+        // user send dropout user shares
+        for (User u : users) {
+            server.receiveMessageAgg(u.sendDropoutAndBeta());
+        }
+        // broadcast the aggregation result: Sigma x_n ...
+        server.broadcastToAggResultAndProof(users);
+        
     }
 }

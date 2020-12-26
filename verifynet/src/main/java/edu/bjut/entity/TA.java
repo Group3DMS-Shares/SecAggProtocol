@@ -28,11 +28,14 @@ public class TA {
 	public MessageKeys genUserKeyPair() {
         BigInteger delta = Utils.randomBig(q);
         BigInteger rho = Utils.randomBig(q);
-        BigInteger n_SK_n = Utils.randomBig(q);
-        Element n_pK_n = this.g.duplicate().mul(n_SK_n);
-        BigInteger p_SK_n = Utils.randomBig(q);
-        Element p_pK_n = this.g.duplicate().mul(p_SK_n);
-        MessageKeys mesKeys = new MessageKeys(delta, rho, n_SK_n, p_SK_n, n_pK_n, p_pK_n);
+
+        BigInteger n_sK_n = Utils.randomBig(q);
+        Element n_pK_n = this.g.duplicate().mul(n_sK_n);
+
+        BigInteger p_sK_n = Utils.randomBig(q);
+        Element p_pK_n = this.g.duplicate().mul(p_sK_n);
+
+        MessageKeys mesKeys = new MessageKeys(delta, rho, n_sK_n, n_pK_n, p_sK_n, p_pK_n);
         return mesKeys;
     }
 

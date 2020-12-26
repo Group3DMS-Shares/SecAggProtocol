@@ -115,4 +115,11 @@ public class Utils {
 	// 	ranBig = ranBig.mod(Params.smallMod);
 	// 	return ranBig;
 	// }
+
+	
+	private static long count = 0;
+
+	public static long incrementId() {
+		return count++;
+	}
 }

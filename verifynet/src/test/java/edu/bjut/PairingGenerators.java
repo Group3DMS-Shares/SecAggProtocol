@@ -3,12 +3,18 @@ package edu.bjut;
 import it.unisa.dia.gas.jpbc.PairingParametersGenerator;
 import it.unisa.dia.gas.plaf.jpbc.pairing.PairingFactory;
 import it.unisa.dia.gas.plaf.jpbc.pairing.a.TypeACurveGenerator;
+import it.unisa.dia.gas.jpbc.Element;
 import it.unisa.dia.gas.jpbc.Pairing;
 import it.unisa.dia.gas.jpbc.PairingParameters;
 
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import java.math.BigInteger;
 
 import org.junit.Test;
+
+import edu.bjut.util.Utils;
 
 public class PairingGenerators {
 
@@ -28,8 +34,41 @@ public class PairingGenerators {
 
     @Test
     public void testGenParamsFromProperties() {
-        Pairing pairing = PairingFactory.getPairing("params/mm/ctl13/toy.properties");
+        Pairing pairing = PairingFactory.getPairing("aggVote1.properties");
         assertNotNull(pairing);
+    }
+
+    @Test
+    public void testECDH() {
+        Pairing pairing = PairingFactory.getPairing("aggVote1.properties");
+        BigInteger order = pairing.getG1().getOrder();
+        Element g = pairing.getG1().newRandomElement();
+
+        // gen skA skB
+        BigInteger skA = Utils.randomBig(order);
+        BigInteger skB = Utils.randomBig(order);
+
+        // gen pkA pkB
+        Element pkA = g.duplicate().mul(skA);
+        Element pkB = g.duplicate().mul(skB);
+
+        // shared secret
+        Element shareAB = pkA.mul(skB);
+        Element shareBA = pkB.mul(skA);
+
+        System.out.println("share B->A" + shareAB.toString());
+        System.out.println("share A->B" + shareAB.toString());
+        assertTrue(shareAB.isEqual(shareBA));
+
+        BigInteger hashShareAB = Utils.hash2Big(shareAB.toString(), order);
+        BigInteger hashShareBA = Utils.hash2Big(shareBA.toString(), order);
+
+        System.out.println("hash B->A" + shareAB.toString());
+        System.out.println("hash A->B" + shareBA.toString());
+
+        assertTrue(hashShareAB.equals(hashShareBA));
+        
+
     }
     
 }
