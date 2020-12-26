@@ -1,5 +1,7 @@
 package edu.bjut.app;
 
+import static org.junit.Assert.assertTrue;
+
 import java.math.BigInteger;
 import java.security.SecureRandom;
 
@@ -22,9 +24,8 @@ public class ShamirTest {
 
 		BigInteger order = pairing.getG1().getOrder();
 		Element g = pairing.getG1().newRandomElement().getImmutable();
-		BigInteger dj = Shamir.randomBig(order);
 
-		final BigInteger secret = dj;
+		final BigInteger secret = Shamir.randomBig(order);
 		final BigInteger prime = order;
 		// 2 - at least 2 secret parts are needed to view secret
 		// 5 - there are 5 persons that get secret parts
@@ -36,10 +37,13 @@ public class ShamirTest {
 		for (int i = 0; i < length; ++i) {
 			sharesToViewSecret[i] = new SecretShare(shares[i].getNumber().multiply(BigInteger.valueOf(10)), g.duplicate().mul(shares[i].getShare()));
 		}
+
+		BigInteger orgResult = Shamir.combine(shares, prime);
+		System.out.println("orgResult secret is: " + orgResult.toString());
 		
 		Element result = Shamir.combine2(sharesToViewSecret, pairing, g, prime);
-		BigInteger orgResult = Shamir.combine(shares, prime);
-		System.out.println("org secret is: " + g.duplicate().mul(dj).toString());
-		System.out.println("djj secret is: " + dj.toString());
+		String org = g.duplicate().mul(secret).toString();
+		System.out.println("org secret is: " + org);
+		assertTrue(result.toString().equals(org));
 	}
 }

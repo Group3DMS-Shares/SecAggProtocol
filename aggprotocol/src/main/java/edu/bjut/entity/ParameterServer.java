@@ -27,7 +27,6 @@ public class ParameterServer {
 	private Pairing pairing;
 	private Element g;
 	private BigInteger dj;
-	private Element rj;
 	private BigInteger order;
 
 	ArrayList<Long> alId = new ArrayList<Long>();
@@ -276,7 +275,7 @@ public class ParameterServer {
 		return prime.add(r).mod(prime);
 	}
 
-	private BigInteger genPi(Element[][] keys, int index, int pos) {
+	protected BigInteger genPi(Element[][] keys, int index, int pos) {
 		BigInteger pi = BigInteger.ZERO;
 
 		for (int i = 0; i < index; i++) {

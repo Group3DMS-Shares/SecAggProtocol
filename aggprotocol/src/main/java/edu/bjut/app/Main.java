@@ -40,7 +40,7 @@ public class Main {
 	 * 
 	 * @throws IOException
 	 */
-	private static void aggPhaseVaryingMeterNumber() throws IOException {
+	public static void aggPhaseVaryingMeterNumber() throws IOException {
 
 		printAndWrite("meter number meter number meter number");
 
@@ -208,7 +208,7 @@ public class Main {
 		// participant reports their data to the parameter server. 
 		for (int i = 0; i < Params.PARTICIPANT_NUM; i++) {
 			if (Params.fails[i] == 1) {
-				RepMessage repMessage = participant[i].genRepMessage();
+				// RepMessage repMessage = participant[i].genRepMessage();
 				continue;
 			}
 			RepMessage repMessage = participant[i].genRepMessage();

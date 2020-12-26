@@ -1,4 +1,4 @@
-package edu.bjut.agg.Shamir;
+package edu.bjut.Shamir;
 
 import java.math.BigInteger;
 import java.util.Random;
