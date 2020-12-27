@@ -18,7 +18,7 @@ public class Params {
 	public static int ARRAY_OF_PARTICIPANT_FAILS[] = {10}; /* number of smart meters */
 	public static int ARRAY_OF_PARTICIPANT_FAILSII[] = {6}; /* number of smart meters */
 	public static int fails[];
-	public static int PARTICIPANT_FAILS = 1; /* number of smart meters */
+	public static int PARTICIPANT_FAILS = 2; /* number of smart meters */
 	public static int ARRAY_OF_RECOVER_K[] = {1,2,3,4,5}; /* number of smart meters */
 	public static int RECOVER_K = 2; /* number of smart meters */
 	

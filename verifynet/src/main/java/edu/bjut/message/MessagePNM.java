@@ -1,4 +1,4 @@
-package edu.bjut.entity;
+package edu.bjut.message;
 
 import edu.bjut.Shamir.SecretShareBigInteger;
 

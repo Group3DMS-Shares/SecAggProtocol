@@ -2,6 +2,7 @@ package edu.bjut.entity;
 
 import java.math.BigInteger;
 
+import edu.bjut.message.MessageKeys;
 import edu.bjut.util.Utils;
 import it.unisa.dia.gas.jpbc.Element;
 import it.unisa.dia.gas.jpbc.Pairing;

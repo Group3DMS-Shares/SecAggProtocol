@@ -8,11 +8,11 @@ import java.util.ArrayList;
 import org.junit.Before;
 import org.junit.Test;
 
-import edu.bjut.entity.MessageKeys;
 import edu.bjut.entity.Params;
 import edu.bjut.entity.ParamsECC;
 import edu.bjut.entity.TA;
 import edu.bjut.entity.User;
+import edu.bjut.message.MessageKeys;
 import edu.bjut.util.Utils;
 import it.unisa.dia.gas.jpbc.Element;
 

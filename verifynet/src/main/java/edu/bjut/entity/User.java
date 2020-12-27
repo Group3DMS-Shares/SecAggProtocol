@@ -6,6 +6,12 @@ import java.util.ArrayList;
 
 import edu.bjut.Shamir.SecretShareBigInteger;
 import edu.bjut.Shamir.Shamir;
+import edu.bjut.message.MessageBetaShare;
+import edu.bjut.message.MessageDroupoutShare;
+import edu.bjut.message.MessageKeys;
+import edu.bjut.message.MessagePNM;
+import edu.bjut.message.MessagePubKeys;
+import edu.bjut.message.MessageSigma;
 import edu.bjut.util.Utils;
 import it.unisa.dia.gas.jpbc.Element;
 import it.unisa.dia.gas.jpbc.Pairing;
@@ -20,7 +26,7 @@ public class User {
 	private BigInteger p_sK_n;
 	private Element p_pK_n;
 	private long id;
-	private ArrayList<MessagePubKeys> broadcastKeysList;
+	private ArrayList<MessagePubKeys> broadcastPubKeysList;
 	private ArrayList<Long> u3ids;
 
 	private Pairing pairing;
@@ -87,26 +93,27 @@ public class User {
 	private BigInteger genMaskedInputII() {
 		BigInteger pi = BigInteger.ZERO;
 		int indexSelf = -1;
-		for (int i = 0; i < broadcastKeysList.size(); ++i) {
-			if (this.broadcastKeysList.get(i).getIdm() == this.id) indexSelf = i;
+		for (int i = 0; i < broadcastPubKeysList.size(); ++i) {
+			if (this.broadcastPubKeysList.get(i).getIdm() == this.id) indexSelf = i;
 		}
 
 		if (-1 == indexSelf) throw new RuntimeException("can't find indexSelf");
 
 		for (int i = 0; i < indexSelf; i++) {
-			BigInteger tem = genKA_AgreeMaskedInput(broadcastKeysList.get(i).getN_pK_n());
-			System.out.println("share: " + this.id + " to " + broadcastKeysList.get(i).getIdm() + ": " + tem.toString());
+			BigInteger tem = genKA_AgreeMaskedInput(broadcastPubKeysList.get(i).getN_pK_n());
+			System.out.println("add ---> share: " + this.id + " to " + broadcastPubKeysList.get(i).getIdm() + ": " + tem.toString());
 			pi = pi.add(tem);
 		}
-		for (int i = indexSelf + 1; i < broadcastKeysList.size(); i++) {
-			BigInteger tem = genKA_AgreeMaskedInput(broadcastKeysList.get(i).getN_pK_n());
-			System.out.println("share: " + this.id + " to " + broadcastKeysList.get(i).getIdm() + ": " + tem.toString());
+		for (int i = indexSelf + 1; i < broadcastPubKeysList.size(); i++) {
+			BigInteger tem = genKA_AgreeMaskedInput(broadcastPubKeysList.get(i).getN_pK_n());
+			System.out.println("subtract --- >share: " + this.id + " to " + broadcastPubKeysList.get(i).getIdm() + ": " + tem.toString());
 			pi = pi.subtract(tem);
 		}
 		return pi;
 	}
 	 
 	public BigInteger genEncGradient() {
+		System.out.println(" User Upload: " + this.id);
 		BigInteger x_n = BigInteger.ONE;
 		BigInteger x_n_hat = x_n.add(genMaskedInputI()).add(genMaskedInputII());
 		return x_n_hat;
@@ -119,12 +126,15 @@ public class User {
 	}
 
 	public ArrayList<MessagePNM> genMsgPNMs() {
+		if (broadcastPubKeysList.size() < Params.RECOVER_K)
+			throw new RuntimeException("get the num of the pubkeys smaller than recovery threshold");
+
 		SecretShareBigInteger[] shareBeta = genBetaShares();
 		SecretShareBigInteger[] shareN_Sk_n_m = genN_SK_nShares();
 		int index = 0;
 		ArrayList<MessagePNM> messagePNMLists= new ArrayList<MessagePNM>();
 
-		for (MessagePubKeys messagePubKeys: broadcastKeysList) {
+		for (MessagePubKeys messagePubKeys: broadcastPubKeysList) {
 			if (messagePubKeys.getIdm() == this.id) {
 				messagePNMLists.add(null);
 				continue;
@@ -152,16 +162,27 @@ public class User {
 		this.p_pK_n = msgKeys.getP_pK_n();
 	}
 
-	public ArrayList<MessageAgg> sendDropoutAndBeta() {
-		ArrayList<MessageAgg> mAggs = new ArrayList<>();
+	public ArrayList<MessageBetaShare> sendBetaShare() {
+		ArrayList<MessageBetaShare> mBetaShares = new ArrayList<>();
 		for (MessagePNM mPnm: pmnList) {
-			if (null != mPnm) {
-				MessageAgg mAgg = new MessageAgg(mPnm.getFromIdN(), mPnm.getToIdM(), mPnm.getBeta_n_m(),
-						mPnm.getN_Sk_n_m());
-				mAggs.add(mAgg);
+			if (null != mPnm && u3ids.contains(mPnm.getFromIdN())) {
+				MessageBetaShare mBetaShare = new MessageBetaShare(mPnm.getFromIdN(), mPnm.getBeta_n_m());
+				mBetaShares.add(mBetaShare);
 			}
 		}
-		return mAggs;
+		return mBetaShares;
+	}
+
+
+	public ArrayList<MessageDroupoutShare> sendDropoutAndBetaShare(ArrayList<Long> droupOutUsers) {
+		ArrayList<MessageDroupoutShare> mDroupoutShares = new ArrayList<>();
+		for (MessagePNM mPnm: pmnList) {
+			if (null != mPnm && droupOutUsers.contains(mPnm.getFromIdN())) {
+				MessageDroupoutShare mDroupoutShare = new MessageDroupoutShare(mPnm.getFromIdN(), mPnm.getN_Sk_n_m());
+				mDroupoutShares.add(mDroupoutShare);
+			}
+		}
+		return mDroupoutShares;
 	}
 
 	public BigInteger getDelta() {
@@ -220,14 +241,16 @@ public class User {
 		this.id = id;
 	}
 
-	public ArrayList<MessagePubKeys> getBroadcastKeysList() {
-		return broadcastKeysList;
+	public ArrayList<MessagePubKeys> getBroadcastPubKeysList() {
+		return broadcastPubKeysList;
 	}
 
-	public void setBroadcastKeysList(ArrayList<MessagePubKeys> broadcastKeysList) {
-		this.broadcastKeysList = broadcastKeysList;
+	public void setBroadcastPubKeysList(ArrayList<MessagePubKeys> broadcastPubKeysList) {
+		this.broadcastPubKeysList = broadcastPubKeysList;
 	}
 
-
+	public boolean verifyAggregation() {
+		return false;
+	}
 }
 

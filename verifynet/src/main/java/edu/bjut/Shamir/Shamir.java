@@ -59,7 +59,7 @@ public final class Shamir {
 
 			accum = prime.add(accum).add(tmp).mod(prime);
 		}
-		System.out.println("The secret is: " + accum + "\n");
+		System.out.println("The secret is: " + accum);
 		return accum;
 	}
 
