@@ -2,7 +2,11 @@ package edu.bjut.app;
 
 import java.io.IOException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import edu.bjut.entity.ParameterServer;
+import edu.bjut.entity.Params;
 import edu.bjut.entity.Participant;
 import edu.bjut.messages.ParamsECC;
 import edu.bjut.messages.RegBack;
@@ -14,11 +18,11 @@ import edu.bjut.messages.RegMessage3;
 import edu.bjut.messages.RepKeys;
 import edu.bjut.messages.RepMessage;
 import edu.bjut.util.Out;
-import edu.bjut.util.Params;
 import edu.bjut.util.Utils;
 
-public class Main {
+public class AggApp {
 	private static Out out;
+	static final Logger LOG = LoggerFactory.getLogger(AggApp.class);
 
 	private static ParameterServer parameterServer;
 	private static Participant[] participant;
@@ -26,12 +30,23 @@ public class Main {
 
 	public static void main(String args[]) throws IOException {
 
+		LOG.trace("Start sec agg protocol");
 		out = new Out("Participants_8_2_first.time");
 		// aggPhaseVaryingMeterNumber();
 		aggWithFails();
-
+		psecAgg();
 		out.close();
-//		Runtime.getRuntime().exec("shutdown -s");
+	}
+
+	private static void psecAgg() throws IOException {
+		// setup
+		parameterServer = new ParameterServer();
+		for (int num : Params.ARRAY_OF_PARTICIPANT_NUM) {
+			Params.PARTICIPANT_NUM = num;
+			parameterServer = new ParameterServer();
+			ParamsECC paramsECC = parameterServer.getParamsECC();
+			participantIntialiaztion(paramsECC);
+		}
 	}
 
 	/**
@@ -66,18 +81,6 @@ public class Main {
 			}
 			printAndWrite("rep rep rep with meter number : " + num);
 			printAndWriteData(totalTime / Params.EXPERIMENT_REPEART_TIMES);
-//
-//			clear();
-//			oneTimeRegTime();
-//			totalTime = 0;
-//			fails = Utils.randomFails(Params.PARTICIPANT_FAILS);
-////			for (int k = 1; k <= Params.PARTICIPANT_FAILS; k++) {
-//			for (int j = 0; j < Params.EXPERIMENT_REPEART_TIMES; j++) {
-//				totalTime += oneRepTimeWithFailedParticipant(Params.PARTICIPANT_FAILS);
-//			}
-////			}
-//			printAndWrite("rep fail rep fail rep fail with meter number : " + num);
-//			printAndWriteData(totalTime / Params.EXPERIMENT_REPEART_TIMES);
 		}
 	}
 
@@ -160,23 +163,28 @@ public class Main {
 	private static long oneTimeRegTime() throws IOException {
 		long sl = System.nanoTime();
 		for (int i = 0; i < participant.length; i++) {
+			// send id, Qi, Ri
 			RegMessage reg = participant[i].genRegMesssage();
 			parameterServer.getRegMessage(reg);
 		}
 
 		for (int i = 0; i < participant.length; i++) {
+			// recv Q1,Q2,Q3.....
 			RegBack back = parameterServer.genRegBack(i);
+			// send xi
 			RegMessage2 reg2 = participant[i].getRegBack(back);
 			parameterServer.getRegMessage2(reg2);
 		}
 
 		for (int i = 0; i < participant.length; i++) {
+			// send ti
 			RegBack2 back2 = parameterServer.genRegBack2(i);
-
 			RegMessage3 reg3 = participant[i].getRegBack2(back2);
+			// recv ki shares
 			parameterServer.getRegMessage3(reg3);
 		}
 
+		// 
 		for (int i = 0; i < participant.length; i++) {
 			RegBack3 back3 = parameterServer.genRegBack3(i);
 			participant[i].getRegBack3(back3);

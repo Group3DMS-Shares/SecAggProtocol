@@ -1,4 +1,4 @@
-package edu.bjut.app;
+package edu.bjut;
 
 import static org.junit.Assert.assertTrue;
 

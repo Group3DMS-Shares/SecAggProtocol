@@ -157,6 +157,7 @@ public class Server {
 				Element snm = nPk.mul(mSk);
 				BigInteger s = Utils.hash2Big(snm.toString(), this.q);
 				System.out.println(n + " to " + m.getKey() + ", KA agree: " + snm);
+
 				if (m.getKey() < n) {
 					omegaSnm = omegaSnm.subtract(s);
 				} else {

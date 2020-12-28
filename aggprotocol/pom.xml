@@ -19,6 +19,11 @@
 
   <dependencies>
     <dependency>
+      <groupId>edu.bjut</groupId>
+      <artifactId>secaggcommon</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
       <groupId>com.github.emilianobonassi</groupId>
       <artifactId>jpbc</artifactId>
     </dependency>

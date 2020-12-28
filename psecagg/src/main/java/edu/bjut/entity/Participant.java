@@ -17,7 +17,6 @@ import edu.bjut.messages.RegMessage2;
 import edu.bjut.messages.RegMessage3;
 import edu.bjut.messages.RepKeys;
 import edu.bjut.messages.RepMessage;
-import edu.bjut.util.Params;
 import edu.bjut.util.Utils;
 import it.unisa.dia.gas.jpbc.Element;
 import it.unisa.dia.gas.jpbc.Pairing;
@@ -50,15 +49,15 @@ public class Participant {
 
 		this.order = pairing.getG1().getOrder();
 		this.di = Utils.randomBig(order);
-
-		this.ki = Utils.randomBig(order);
-
 		this.ri = this.g.duplicate().pow(this.di);
+
+		// for signature
+		this.ki = Utils.randomBig(order);
 		this.qi = this.g.duplicate().pow(this.ki);
 	}
 
 	/**
-	 * A meter sends its identity and public key to aggregator for registration
+	 * A participant sends its identity and public key to aggregator for registration
 	 */
 	public RegMessage genRegMesssage() {
 		RegMessage reg = new RegMessage(this.id, this.ri, this.qi);

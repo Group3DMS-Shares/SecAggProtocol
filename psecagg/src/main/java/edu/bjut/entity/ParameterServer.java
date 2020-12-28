@@ -16,7 +16,6 @@ import edu.bjut.messages.RegMessage2;
 import edu.bjut.messages.RegMessage3;
 import edu.bjut.messages.RepKeys;
 import edu.bjut.messages.RepMessage;
-import edu.bjut.util.Params;
 import edu.bjut.util.Utils;
 import it.unisa.dia.gas.jpbc.Element;
 import it.unisa.dia.gas.jpbc.Pairing;
