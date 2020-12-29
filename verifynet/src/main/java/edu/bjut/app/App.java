@@ -2,7 +2,6 @@ package edu.bjut.app;
 
 import java.util.ArrayList;
 
-import edu.bjut.entity.Params;
 import edu.bjut.entity.Server;
 import edu.bjut.entity.TA;
 import edu.bjut.entity.User;
@@ -11,6 +10,7 @@ import edu.bjut.message.MessageDroupoutShare;
 import edu.bjut.message.MessageKeys;
 import edu.bjut.message.MessagePNM;
 import edu.bjut.message.MessageSigma;
+import edu.bjut.util.Params;
 
 /**
  * Hello world!
