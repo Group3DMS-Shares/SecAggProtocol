@@ -14,7 +14,7 @@ import java.math.BigInteger;
 
 import org.junit.Test;
 
-import edu.bjut.util.Utils;
+import edu.bjut.common.util.Utils;
 
 public class PairingGenerators {
 

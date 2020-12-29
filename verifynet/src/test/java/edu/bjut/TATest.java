@@ -8,12 +8,12 @@ import java.util.ArrayList;
 import org.junit.Before;
 import org.junit.Test;
 
-import edu.bjut.entity.ParamsECC;
-import edu.bjut.entity.TA;
-import edu.bjut.entity.User;
-import edu.bjut.message.MessageKeys;
-import edu.bjut.util.Params;
-import edu.bjut.util.Utils;
+import edu.bjut.psecagg.entity.ParamsECC;
+import edu.bjut.psecagg.entity.TA;
+import edu.bjut.psecagg.entity.User;
+import edu.bjut.verifynet.message.MessageKeys;
+import edu.bjut.common.util.Params;
+import edu.bjut.common.util.Utils;
 import it.unisa.dia.gas.jpbc.Element;
 
 

@@ -9,7 +9,7 @@
     <version>1.0-SNAPSHOT</version>
   </parent>
 
-  <groupId>edu.bjut.app</groupId>
+  <groupId>edu.bjut.psecagg.app</groupId>
   <artifactId>psecagg</artifactId>
   <version>1.0-SNAPSHOT</version>
 
