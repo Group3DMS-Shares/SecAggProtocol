@@ -19,14 +19,14 @@ public class TA {
     private long id;
 
     public TA() {
-		this.pairing = PairingFactory.getPairing("aggVote1.properties");
-		this.g = this.pairing.getG1().newRandomElement().getImmutable();
+        this.pairing = PairingFactory.getPairing("aggVote1.properties");
+        this.g = this.pairing.getG1().newRandomElement().getImmutable();
         this.q = this.pairing.getG1().getOrder();
         this.dj = Utils.randomBig(q);
         this.id = Utils.randomlong();
     }
 
-	public MessageKeys genUserKeyPair() {
+    public MessageKeys genUserKeyPair() {
         BigInteger delta = Utils.randomBig(q);
         BigInteger rho = Utils.randomBig(q);
 

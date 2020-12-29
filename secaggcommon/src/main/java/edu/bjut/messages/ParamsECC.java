@@ -1,4 +1,4 @@
-package edu.bjut.entity;
+package edu.bjut.messages;
 
 import it.unisa.dia.gas.jpbc.Element;
 import it.unisa.dia.gas.jpbc.Pairing;

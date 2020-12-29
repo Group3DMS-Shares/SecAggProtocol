@@ -18,225 +18,225 @@ import edu.bjut.util.Params;
 import edu.bjut.util.Utils;
 
 public class Main {
-	private static Out out;
+    private static Out out;
 
-	private static ParameterServer parameterServer;
-	private static Participant[] participant;
+    private static ParameterServer parameterServer;
+    private static Participant[] participant;
 
 
-	public static void main(String args[]) throws IOException {
+    public static void main(String args[]) throws IOException {
 
-		out = new Out("Participants_8_2_first.time");
-		// aggPhaseVaryingMeterNumber();
-		aggWithFails();
+        out = new Out("Participants_8_2_first.time");
+        // aggPhaseVaryingMeterNumber();
+        aggWithFails();
 
-		out.close();
-//		Runtime.getRuntime().exec("shutdown -s");
-	}
+        out.close();
+//      Runtime.getRuntime().exec("shutdown -s");
+    }
 
-	/**
-	 * simulate the multiple reporting phase a meter report multiple types of data
-	 * to the server analysis.
-	 * 
-	 * @throws IOException
-	 */
-	public static void aggPhaseVaryingMeterNumber() throws IOException {
+    /**
+     * simulate the multiple reporting phase a meter report multiple types of data
+     * to the server analysis.
+     * 
+     * @throws IOException
+     */
+    public static void aggPhaseVaryingMeterNumber() throws IOException {
 
-		printAndWrite("meter number meter number meter number");
+        printAndWrite("meter number meter number meter number");
 
-		parameterServer = new ParameterServer();
-		for (int num : Params.ARRAY_OF_PARTICIPANT_NUM) {
-			Params.PARTICIPANT_NUM = num;
-			parameterServer = new ParameterServer();
-			ParamsECC ps = parameterServer.getParamsECC();
-			participantIntialiaztion(ps);
+        parameterServer = new ParameterServer();
+        for (int num : Params.ARRAY_OF_PARTICIPANT_NUM) {
+            Params.PARTICIPANT_NUM = num;
+            parameterServer = new ParameterServer();
+            ParamsECC ps = parameterServer.getParamsECC();
+            participantIntialiaztion(ps);
 
-			double totalTime = 0;
-			for (int j = 0; j < Params.EXPERIMENT_REPEART_TIMES; j++) {
-				totalTime += oneTimeRegTime();
-				clear();
-			}
-			printAndWrite("reg reg reg with meter number : " + num);
-			printAndWriteData(totalTime / Params.EXPERIMENT_REPEART_TIMES);
+            double totalTime = 0;
+            for (int j = 0; j < Params.EXPERIMENT_REPEART_TIMES; j++) {
+                totalTime += oneTimeRegTime();
+                clear();
+            }
+            printAndWrite("reg reg reg with meter number : " + num);
+            printAndWriteData(totalTime / Params.EXPERIMENT_REPEART_TIMES);
 
-			oneTimeRegTime();
-			totalTime = 0;
-			for (int j = 0; j < Params.EXPERIMENT_REPEART_TIMES; j++) {
-				totalTime += oneTimeMeterRepTime();
-			}
-			printAndWrite("rep rep rep with meter number : " + num);
-			printAndWriteData(totalTime / Params.EXPERIMENT_REPEART_TIMES);
+            oneTimeRegTime();
+            totalTime = 0;
+            for (int j = 0; j < Params.EXPERIMENT_REPEART_TIMES; j++) {
+                totalTime += oneTimeMeterRepTime();
+            }
+            printAndWrite("rep rep rep with meter number : " + num);
+            printAndWriteData(totalTime / Params.EXPERIMENT_REPEART_TIMES);
 //
-//			clear();
-//			oneTimeRegTime();
-//			totalTime = 0;
-//			fails = Utils.randomFails(Params.PARTICIPANT_FAILS);
-////			for (int k = 1; k <= Params.PARTICIPANT_FAILS; k++) {
-//			for (int j = 0; j < Params.EXPERIMENT_REPEART_TIMES; j++) {
-//				totalTime += oneRepTimeWithFailedParticipant(Params.PARTICIPANT_FAILS);
-//			}
-////			}
-//			printAndWrite("rep fail rep fail rep fail with meter number : " + num);
-//			printAndWriteData(totalTime / Params.EXPERIMENT_REPEART_TIMES);
-		}
-	}
+//          clear();
+//          oneTimeRegTime();
+//          totalTime = 0;
+//          fails = Utils.randomFails(Params.PARTICIPANT_FAILS);
+////          for (int k = 1; k <= Params.PARTICIPANT_FAILS; k++) {
+//          for (int j = 0; j < Params.EXPERIMENT_REPEART_TIMES; j++) {
+//              totalTime += oneRepTimeWithFailedParticipant(Params.PARTICIPANT_FAILS);
+//          }
+////          }
+//          printAndWrite("rep fail rep fail rep fail with meter number : " + num);
+//          printAndWriteData(totalTime / Params.EXPERIMENT_REPEART_TIMES);
+        }
+    }
 
-	/**
-	 * simulate the multiple reporting phase a meter report multiple types of data
-	 * to the server analysis.
-	 * 
-	 * @throws IOException
-	 */
-	private static void aggWithFails() throws IOException {
-		printAndWrite("meter number meter number meter number");
+    /**
+     * simulate the multiple reporting phase a meter report multiple types of data
+     * to the server analysis.
+     * 
+     * @throws IOException
+     */
+    private static void aggWithFails() throws IOException {
+        printAndWrite("meter number meter number meter number");
 
-		Params.PARTICIPANT_NUM = 20;
-		for (int fail : Params.ARRAY_OF_PARTICIPANT_FAILS) {
+        Params.PARTICIPANT_NUM = 20;
+        for (int fail : Params.ARRAY_OF_PARTICIPANT_FAILS) {
 
-			Params.PARTICIPANT_FAILS = fail;
-			double totalTime = 0;
+            Params.PARTICIPANT_FAILS = fail;
+            double totalTime = 0;
 
-			parameterServer = new ParameterServer();
-			ParamsECC ps = parameterServer.getParamsECC();
-			participantIntialiaztion(ps);
-			oneTimeRegTime();
+            parameterServer = new ParameterServer();
+            ParamsECC ps = parameterServer.getParamsECC();
+            participantIntialiaztion(ps);
+            oneTimeRegTime();
 
-			Params.fails = Utils.setFailedParticipants(fail);
-//			for (int k = 1; k <= Params.PARTICIPANT_FAILS; k++) {
-			for (int j = 0; j < Params.EXPERIMENT_REPEART_TIMES; j++) {
-				totalTime += oneRepTimeWithFailedParticipant(fail);
-			}
-//			}
-			printAndWrite("rep fail rep fail rep fail with meter number : " + fail);
-			printAndWriteData(totalTime / Params.EXPERIMENT_REPEART_TIMES);
-		}
+            Params.fails = Utils.setFailedParticipants(fail);
+//          for (int k = 1; k <= Params.PARTICIPANT_FAILS; k++) {
+            for (int j = 0; j < Params.EXPERIMENT_REPEART_TIMES; j++) {
+                totalTime += oneRepTimeWithFailedParticipant(fail);
+            }
+//          }
+            printAndWrite("rep fail rep fail rep fail with meter number : " + fail);
+            printAndWriteData(totalTime / Params.EXPERIMENT_REPEART_TIMES);
+        }
 
-//		for (int recover : Params.ARRAY_OF_RECOVER_K) {
-//			Params.PARTICIPANT_FAILS = 6;
-//			Params.RECOVER_K = recover;
-//			int fail  = 6;
-//			double totalTime = 0;
+//      for (int recover : Params.ARRAY_OF_RECOVER_K) {
+//          Params.PARTICIPANT_FAILS = 6;
+//          Params.RECOVER_K = recover;
+//          int fail  = 6;
+//          double totalTime = 0;
 //
-//			parameterServer = new ParameterServer();
-//			ParamsECC ps = parameterServer.getParamsECC();
-//			participantIntialiaztion(ps);
-//			oneTimeRegTime();
+//          parameterServer = new ParameterServer();
+//          ParamsECC ps = parameterServer.getParamsECC();
+//          participantIntialiaztion(ps);
+//          oneTimeRegTime();
 //
-//			fails = Utils.randomFails(fail);
-//			for (int j = 0; j < Params.EXPERIMENT_REPEART_TIMES; j++) {
-//				totalTime += oneRepTimeWithFailedParticipant(fail);
-//			}
-////			}
-//			printAndWrite("rep fail rep fail rep fail with meter number : " + fail);
-//			printAndWriteData(totalTime / Params.EXPERIMENT_REPEART_TIMES);
-//		}
+//          fails = Utils.randomFails(fail);
+//          for (int j = 0; j < Params.EXPERIMENT_REPEART_TIMES; j++) {
+//              totalTime += oneRepTimeWithFailedParticipant(fail);
+//          }
+////          }
+//          printAndWrite("rep fail rep fail rep fail with meter number : " + fail);
+//          printAndWriteData(totalTime / Params.EXPERIMENT_REPEART_TIMES);
+//      }
 
-	}
+    }
 
-	private static void printAndWriteData(double totalTime) {
-		System.out.println(totalTime / 1000000);
-		out.println(totalTime / 1000000);
-		printAndWrite("");
-		printAndWrite("");
-	}
+    private static void printAndWriteData(double totalTime) {
+        System.out.println(totalTime / 1000000);
+        out.println(totalTime / 1000000);
+        printAndWrite("");
+        printAndWrite("");
+    }
 
-	private static void printAndWrite(String outStr) {
-		System.out.println(outStr);
-		out.println(outStr);
-	}
+    private static void printAndWrite(String outStr) {
+        System.out.println(outStr);
+        out.println(outStr);
+    }
 
-	private static void participantIntialiaztion(ParamsECC ps) throws IOException {
-		participant = new Participant[Params.PARTICIPANT_NUM];
+    private static void participantIntialiaztion(ParamsECC ps) throws IOException {
+        participant = new Participant[Params.PARTICIPANT_NUM];
 
-		for (int i = 0; i < participant.length; i++) {
-			participant[i] = new Participant(ps, i);
-		}
-	}
+        for (int i = 0; i < participant.length; i++) {
+            participant[i] = new Participant(ps, i);
+        }
+    }
 
-	private static void clear() throws IOException {
-		parameterServer.clear();
-	}
+    private static void clear() throws IOException {
+        parameterServer.clear();
+    }
 
-	private static long oneTimeRegTime() throws IOException {
-		long sl = System.nanoTime();
-		for (int i = 0; i < participant.length; i++) {
-			RegMessage reg = participant[i].genRegMesssage();
-			parameterServer.getRegMessage(reg);
-		}
+    private static long oneTimeRegTime() throws IOException {
+        long sl = System.nanoTime();
+        for (int i = 0; i < participant.length; i++) {
+            RegMessage reg = participant[i].genRegMesssage();
+            parameterServer.getRegMessage(reg);
+        }
 
-		for (int i = 0; i < participant.length; i++) {
-			RegBack back = parameterServer.genRegBack(i);
-			RegMessage2 reg2 = participant[i].getRegBack(back);
-			parameterServer.getRegMessage2(reg2);
-		}
+        for (int i = 0; i < participant.length; i++) {
+            RegBack back = parameterServer.genRegBack(i);
+            RegMessage2 reg2 = participant[i].getRegBack(back);
+            parameterServer.getRegMessage2(reg2);
+        }
 
-		for (int i = 0; i < participant.length; i++) {
-			RegBack2 back2 = parameterServer.genRegBack2(i);
+        for (int i = 0; i < participant.length; i++) {
+            RegBack2 back2 = parameterServer.genRegBack2(i);
 
-			RegMessage3 reg3 = participant[i].getRegBack2(back2);
-			parameterServer.getRegMessage3(reg3);
-		}
+            RegMessage3 reg3 = participant[i].getRegBack2(back2);
+            parameterServer.getRegMessage3(reg3);
+        }
 
-		for (int i = 0; i < participant.length; i++) {
-			RegBack3 back3 = parameterServer.genRegBack3(i);
-			participant[i].getRegBack3(back3);
-		}
+        for (int i = 0; i < participant.length; i++) {
+            RegBack3 back3 = parameterServer.genRegBack3(i);
+            participant[i].getRegBack3(back3);
+        }
 
-		long el = System.nanoTime();
-		return (el - sl);
-	}
+        long el = System.nanoTime();
+        return (el - sl);
+    }
 
-	private static long oneTimeMeterRepTime() throws IOException {
-		long sl = System.nanoTime();
-		RepMessage rep = null;
-		for (int i = 0; i < Params.PARTICIPANT_NUM; i++) {
-			RepMessage repMessage = participant[i].genRepMessage();
-			rep = parameterServer.getRepMessage(repMessage);
-		}
-		for (int i = 0; i < Params.PARTICIPANT_NUM; i++) {
-			participant[i].getRepMessage(rep);
-		}
-		System.out.println();
-		long el = System.nanoTime();
-		return (el - sl);
-	}
+    private static long oneTimeMeterRepTime() throws IOException {
+        long sl = System.nanoTime();
+        RepMessage rep = null;
+        for (int i = 0; i < Params.PARTICIPANT_NUM; i++) {
+            RepMessage repMessage = participant[i].genRepMessage();
+            rep = parameterServer.getRepMessage(repMessage);
+        }
+        for (int i = 0; i < Params.PARTICIPANT_NUM; i++) {
+            participant[i].getRepMessage(rep);
+        }
+        System.out.println();
+        long el = System.nanoTime();
+        return (el - sl);
+    }
 
-	private static long oneRepTimeWithFailedParticipant(int num) throws IOException {
-		long sl = System.nanoTime();
-		RepMessage rep = null;
+    private static long oneRepTimeWithFailedParticipant(int num) throws IOException {
+        long sl = System.nanoTime();
+        RepMessage rep = null;
 
-		// participant reports their data to the parameter server. 
-		for (int i = 0; i < Params.PARTICIPANT_NUM; i++) {
-			if (Params.fails[i] == 1) {
-				// RepMessage repMessage = participant[i].genRepMessage();
-				continue;
-			}
-			RepMessage repMessage = participant[i].genRepMessage();
-			rep = parameterServer.getRepMessage(repMessage);
-		}
+        // participant reports their data to the parameter server. 
+        for (int i = 0; i < Params.PARTICIPANT_NUM; i++) {
+            if (Params.fails[i] == 1) {
+                // RepMessage repMessage = participant[i].genRepMessage();
+                continue;
+            }
+            RepMessage repMessage = participant[i].genRepMessage();
+            rep = parameterServer.getRepMessage(repMessage);
+        }
 
-		//generates keys for participants
-		for (int i = 0; i < Params.PARTICIPANT_NUM; i++) {
-			if (Params.fails[i] == 1)
-				continue;
+        //generates keys for participants
+        for (int i = 0; i < Params.PARTICIPANT_NUM; i++) {
+            if (Params.fails[i] == 1)
+                continue;
 
-			RepKeys repKeys = participant[i].genRepKeys(Params.fails, num);
-			rep = parameterServer.getRepKeys(repKeys);
+            RepKeys repKeys = participant[i].genRepKeys(Params.fails, num);
+            rep = parameterServer.getRepKeys(repKeys);
 
-			if (null != rep)
-				break;
-		}
+            if (null != rep)
+                break;
+        }
 
-		//sends the recovered data back to participants
-		for (int i = 0; i < Params.PARTICIPANT_NUM; i++) {
-			if (Params.fails[i] == 1)
-				continue;
-			participant[i].getRepMessageFails(rep);
-		}
-		System.out.println();
+        //sends the recovered data back to participants
+        for (int i = 0; i < Params.PARTICIPANT_NUM; i++) {
+            if (Params.fails[i] == 1)
+                continue;
+            participant[i].getRepMessageFails(rep);
+        }
+        System.out.println();
 
-		long el = System.nanoTime();
-		return (el - sl);
-	}
+        long el = System.nanoTime();
+        return (el - sl);
+    }
 
 }

@@ -1,6 +1,7 @@
 package edu.bjut.app;
 
 import java.io.IOException;
+import java.util.ArrayList;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,41 +12,26 @@ import edu.bjut.messages.ParamsECC;
 import edu.bjut.util.Params;
 
 public class AggApp {
-	static final Logger LOG = LoggerFactory.getLogger(AggApp.class);
 
-	private static ParameterServer parameterServer;
-	private static Participant[] participant;
+    static final Logger LOG = LoggerFactory.getLogger(AggApp.class);
 
+    public static void main(String args[]) throws IOException {
 
-	public static void main(String args[]) throws IOException {
+        LOG.info("Start sec agg protocol");
+        // Setup system
+        ParameterServer parameterServer= new ParameterServer();
+        ArrayList<Participant> participants = new ArrayList<>();
+        ParamsECC paramsECC = parameterServer.getParamsECC();
+        for (int i = 0; i < Params.PARTICIPANT_NUM; i++) {
+            // generate secret key and public key for each user
+            participants.add(new Participant(paramsECC));
+        }
+        Aggregation aggregation = new Aggregation(parameterServer, participants);
 
-		LOG.info("Start sec agg protocol");
-		// aggPhaseVaryingMeterNumber();
-		// aggWithFails();
-		psecAgg();
-	}
+        // Distribute sign public keys to all user
+        aggregation.distributeSignPubKeys();
 
-	private static void psecAgg() throws IOException {
-		// setup
-		parameterServer = new ParameterServer();
-		for (int num : Params.ARRAY_OF_PARTICIPANT_NUM) {
-			Params.PARTICIPANT_NUM = num;
-			parameterServer = new ParameterServer();
-			ParamsECC paramsECC = parameterServer.getParamsECC();
-			participantIntialiaztion(paramsECC);
-		}
-	}
-
-
-	private static void participantIntialiaztion(ParamsECC ps) throws IOException {
-		participant = new Participant[Params.PARTICIPANT_NUM];
-
-		for (int i = 0; i < participant.length; i++) {
-			participant[i] = new Participant(ps, i);
-		}
-	}
-
-	private static void clear() throws IOException {
-		parameterServer.clear();
-	}
+        // round 0 (AdvertiseKeys)
+        aggregation.advertiseKeys();
+    }
 }

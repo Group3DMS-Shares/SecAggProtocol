@@ -5,18 +5,18 @@ import java.util.ArrayList;
 import edu.bjut.Shamir.SecretShareBigInteger;
 
 public class RegBack3 {
-	private ArrayList<SecretShareBigInteger> alKeys;
+    private ArrayList<SecretShareBigInteger> alKeys;
 
-	public RegBack3(ArrayList<SecretShareBigInteger> alKeys) {
-		super();
-		this.alKeys = alKeys;
-	}
+    public RegBack3(ArrayList<SecretShareBigInteger> alKeys) {
+        super();
+        this.alKeys = alKeys;
+    }
 
-	public ArrayList<SecretShareBigInteger> getAlKeys() {
-		return alKeys;
-	}
+    public ArrayList<SecretShareBigInteger> getAlKeys() {
+        return alKeys;
+    }
 
-	public void setAlKeys(ArrayList<SecretShareBigInteger> alKeys) {
-		this.alKeys = alKeys;
-	}
+    public void setAlKeys(ArrayList<SecretShareBigInteger> alKeys) {
+        this.alKeys = alKeys;
+    }
 }

@@ -3,7 +3,7 @@ package edu.bjut.message;
 import it.unisa.dia.gas.jpbc.Element;
 
 public class MessagePubKeys {
-	private Element n_pK_n;
+    private Element n_pK_n;
     private Element p_pK_n;
     private long idm;
 
