@@ -1,13 +1,18 @@
 package edu.bjut.psecagg.entity;
 
 import java.math.BigInteger;
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Map;
 
 import edu.bjut.common.Shamir.SecretShareBigInteger;
-import edu.bjut.psecagg.messages.MsgRound0;
-import edu.bjut.psecagg.messages.ParamsECC;
+import edu.bjut.common.Shamir.Shamir;
+import edu.bjut.common.messages.ParamsECC;
+import edu.bjut.common.util.Params;
 import edu.bjut.common.util.Utils;
+import edu.bjut.psecagg.messages.MsgResponseRound0;
+import edu.bjut.psecagg.messages.MsgRound0;
+import edu.bjut.psecagg.messages.MsgRound1;
 import it.unisa.dia.gas.jpbc.Element;
 import it.unisa.dia.gas.jpbc.Pairing;
 
@@ -72,7 +77,7 @@ public class Participant {
         Element hash = Utils.hash2ElementG1(this.cPk_u.toString() + this.sPk_u,
                 this.pairing);
         Element sigma_u = hash.mul(this.duSk);
-        MsgRound0 msgRound0 = new MsgRound0(this.cPk_u, this.sPk_u, sigma_u);
+        MsgRound0 msgRound0 = new MsgRound0(this.id, this.cPk_u, this.sPk_u, sigma_u);
         return msgRound0;
     }
 
@@ -106,6 +111,25 @@ public class Participant {
 
     public void setcPk_u(Element cPk_u) {
         this.cPk_u = cPk_u;
+    }
+
+	public MsgRound1 sendMsgRound1(MsgResponseRound0 msgResponse) {
+        var msg = msgResponse.getPubKeys();
+        // TODO verify signature
+        for (var m : msg) {
+            if (this.id == m.getId()) continue;
+            if (verifySign(m.getcPk_u(), m.getsPk_u(), m.getSigma_u()) == false)
+                return null;
+        }
+        // sample b_u
+        BigInteger b_u = Utils.randomBig(order);
+        SecureRandom random = new SecureRandom();
+        SecretShareBigInteger[] shares = Shamir.split(b_u, Params.RECOVER_K, Params.PARTICIPANT_NUM - 1, order, random);
+		return null;
+    }
+    
+    private boolean verifySign(Element getcPk_u, Element getsPk_u, Element sigma_u) {
+        return false;
     }
 
 }

@@ -5,8 +5,9 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 
 import edu.bjut.common.Shamir.SecretShareBigInteger;
+import edu.bjut.common.messages.ParamsECC;
+import edu.bjut.psecagg.messages.MsgResponseRound0;
 import edu.bjut.psecagg.messages.MsgRound0;
-import edu.bjut.psecagg.messages.ParamsECC;
 import edu.bjut.psecagg.messages.RepKeys;
 import edu.bjut.psecagg.messages.RepMessage;
 import it.unisa.dia.gas.jpbc.Element;
@@ -29,6 +30,11 @@ public class ParameterServer {
     private ArrayList<RepMessage> alRep = new ArrayList<RepMessage>();
     private ArrayList<RepKeys> alRepKeys = new ArrayList<RepKeys>();
 
+    // Round 0
+    private int u1Count;
+    private ArrayList<MsgRound0> msgRound0s;
+
+
     public ParameterServer() throws IOException {
 
         super();
@@ -36,6 +42,8 @@ public class ParameterServer {
 
         this.order = pairing.getG1().getOrder();
         this.g = this.pairing.getG1().newRandomElement().getImmutable();
+        // Round 0
+        this.u1Count = 0;
     }
 
     public ParamsECC getParamsECC() {
@@ -45,6 +53,14 @@ public class ParameterServer {
 
 
     public void recvMsgRound0(MsgRound0 msgRound0) {
-
+        msgRound0s.add(msgRound0);
     }
+
+	public MsgResponseRound0 sendMsgResponseRound0() {
+        this.u1Count = msgRound0s.size();
+        // TODO t-out-of-n check
+        return new MsgResponseRound0(msgRound0s);
+	}
+
+
 }

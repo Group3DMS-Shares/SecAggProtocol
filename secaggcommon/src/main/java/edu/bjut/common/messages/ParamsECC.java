@@ -1,4 +1,4 @@
-package edu.bjut.psecagg.messages;
+package edu.bjut.common.messages;
 
 import it.unisa.dia.gas.jpbc.Element;
 import it.unisa.dia.gas.jpbc.Pairing;

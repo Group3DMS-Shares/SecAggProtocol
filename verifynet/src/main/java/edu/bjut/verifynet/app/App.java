@@ -1,16 +1,16 @@
-package edu.bjut.psecagg.app;
+package edu.bjut.verifynet.app;
 
 import java.util.ArrayList;
 
-import edu.bjut.psecagg.entity.Server;
-import edu.bjut.psecagg.entity.TA;
-import edu.bjut.psecagg.entity.User;
+import edu.bjut.common.util.Params;
+import edu.bjut.verifynet.entity.Server;
+import edu.bjut.verifynet.entity.TA;
+import edu.bjut.verifynet.entity.User;
 import edu.bjut.verifynet.message.MessageBetaShare;
 import edu.bjut.verifynet.message.MessageDroupoutShare;
 import edu.bjut.verifynet.message.MessageKeys;
 import edu.bjut.verifynet.message.MessagePNM;
 import edu.bjut.verifynet.message.MessageSigma;
-import edu.bjut.common.util.Params;
 
 /**
  * Hello world!

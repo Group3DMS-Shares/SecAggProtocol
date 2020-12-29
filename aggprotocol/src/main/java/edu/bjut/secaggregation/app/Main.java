@@ -2,7 +2,10 @@ package edu.bjut.secaggregation.app;
 
 import java.io.IOException;
 
-import edu.bjut.psecagg.messages.ParamsECC;
+import edu.bjut.common.messages.ParamsECC;
+import edu.bjut.common.util.Out;
+import edu.bjut.common.util.Params;
+import edu.bjut.common.util.Utils;
 import edu.bjut.secaggregation.entity.ParameterServer;
 import edu.bjut.secaggregation.entity.Participant;
 import edu.bjut.secaggregation.messages.RegBack;
@@ -13,9 +16,6 @@ import edu.bjut.secaggregation.messages.RegMessage2;
 import edu.bjut.secaggregation.messages.RegMessage3;
 import edu.bjut.secaggregation.messages.RepKeys;
 import edu.bjut.secaggregation.messages.RepMessage;
-import edu.bjut.common.util.Out;
-import edu.bjut.common.util.Params;
-import edu.bjut.common.util.Utils;
 
 public class Main {
     private static Out out;

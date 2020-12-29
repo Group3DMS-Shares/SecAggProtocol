@@ -4,14 +4,24 @@ import it.unisa.dia.gas.jpbc.Element;
 
 public class MsgRound0 {
 
+    private long id;
     private Element cPk_u;
     private Element sPk_u;
     private Element sigma_u;
 
-    public MsgRound0(Element cPk_u, Element sPk_u, Element sigma_u) {
+    public MsgRound0(long id, Element cPk_u, Element sPk_u, Element sigma_u) {
+        this.setId(id);
         this.setcPk_u(cPk_u);
         this.setsPk_u(sPk_u);
         this.setSigma_u(sigma_u);
+    }
+
+    public long getId() {
+        return id;
+    }
+
+    public void setId(long id) {
+        this.id = id;
     }
 
     public Element getcPk_u() {

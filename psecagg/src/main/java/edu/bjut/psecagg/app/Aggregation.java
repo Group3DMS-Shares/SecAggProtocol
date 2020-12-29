@@ -6,7 +6,9 @@ import java.util.HashMap;
 
 import edu.bjut.psecagg.entity.ParameterServer;
 import edu.bjut.psecagg.entity.Participant;
+import edu.bjut.psecagg.messages.MsgResponseRound0;
 import edu.bjut.psecagg.messages.MsgRound0;
+import edu.bjut.psecagg.messages.MsgRound1;
 import it.unisa.dia.gas.jpbc.Element;
 
 public class Aggregation {
@@ -28,13 +30,20 @@ public class Aggregation {
         participants.forEach(x-> x.setSignPubKeys(keyMaps));
     }
 
-    public void advertiseKeys() {
+    public MsgResponseRound0 advertiseKeys() {
         for (var p : participants) {
             MsgRound0 msgRound0 =   p.sendMsgRound0();
             this.parameterServer.recvMsgRound0(msgRound0);
-
         }
+        MsgResponseRound0 msgResponseRound0 = this.parameterServer.sendMsgResponseRound0();
+        return msgResponseRound0;
     }
+
+	public void shareKeys(MsgResponseRound0 msgResponse) {
+        for (var p : participants) {
+            MsgRound1 msgRound1 = p.sendMsgRound1(msgResponse);
+        }
+	}
 
 
 }

@@ -1,13 +1,13 @@
 package edu.bjut.psecagg.app;
 
 import java.math.BigInteger;
-import java.net.URL;
+
+import org.junit.Test;
 
 import edu.bjut.common.util.Utils;
 import it.unisa.dia.gas.jpbc.Element;
 import it.unisa.dia.gas.jpbc.Pairing;
 import it.unisa.dia.gas.plaf.jpbc.pairing.PairingFactory;
-import org.junit.Test;
 
 /**
  * Unit test for simple App.

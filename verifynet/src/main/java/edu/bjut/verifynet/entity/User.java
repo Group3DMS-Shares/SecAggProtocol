@@ -1,4 +1,4 @@
-package edu.bjut.psecagg.entity;
+package edu.bjut.verifynet.entity;
 
 import java.math.BigInteger;
 import java.security.SecureRandom;
@@ -6,6 +6,7 @@ import java.util.ArrayList;
 
 import edu.bjut.common.Shamir.SecretShareBigInteger;
 import edu.bjut.common.Shamir.Shamir;
+import edu.bjut.common.messages.ParamsECC;
 import edu.bjut.verifynet.message.MessageBetaShare;
 import edu.bjut.verifynet.message.MessageDroupoutShare;
 import edu.bjut.verifynet.message.MessageKeys;

@@ -1,8 +1,9 @@
-package edu.bjut.psecagg.entity;
+package edu.bjut.verifynet.entity;
 
 import java.math.BigInteger;
 
 import edu.bjut.verifynet.message.MessageKeys;
+import edu.bjut.common.messages.ParamsECC;
 import edu.bjut.common.util.Utils;
 import it.unisa.dia.gas.jpbc.Element;
 import it.unisa.dia.gas.jpbc.Pairing;

@@ -6,10 +6,10 @@ import java.util.ArrayList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import edu.bjut.common.messages.ParamsECC;
+import edu.bjut.common.util.Params;
 import edu.bjut.psecagg.entity.ParameterServer;
 import edu.bjut.psecagg.entity.Participant;
-import edu.bjut.psecagg.messages.ParamsECC;
-import edu.bjut.common.util.Params;
 
 public class AggApp {
 
@@ -32,6 +32,10 @@ public class AggApp {
         aggregation.distributeSignPubKeys();
 
         // Round 0 (AdvertiseKeys)
-        aggregation.advertiseKeys();
+        var msgResponse = aggregation.advertiseKeys();
+        if (null == msgResponse) throw new RuntimeException("smaller than share threshold");
+
+        // Round1 (ShareKeys)
+        aggregation.shareKeys(msgResponse);
     }
 }
