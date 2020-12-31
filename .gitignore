@@ -1,10 +1,11 @@
 .classpath
 .project
 
-.settings
-.vscode
+.settings/
+.vscode/
 
-*/.settings/*
-*/.vscode/*
+target
 
-*/target/*
+# idea
+*.iml
+.idea/

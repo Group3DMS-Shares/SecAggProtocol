@@ -1,6 +1,6 @@
 package edu.bjut.psecagg.messages;
 
-import edu.bjut.common.Shamir.SecretShare;
+import edu.bjut.common.shamir.SecretShare;
 import it.unisa.dia.gas.jpbc.Element;
 
 public class RepKeys {

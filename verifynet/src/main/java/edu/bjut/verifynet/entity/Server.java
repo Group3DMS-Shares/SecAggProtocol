@@ -6,8 +6,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import edu.bjut.common.Shamir.SecretShareBigInteger;
-import edu.bjut.common.Shamir.Shamir;
+import edu.bjut.common.shamir.SecretShareBigInteger;
+import edu.bjut.common.shamir.Shamir;
 import edu.bjut.common.messages.ParamsECC;
 import edu.bjut.verifynet.message.MessageBetaShare;
 import edu.bjut.verifynet.message.MessageDroupoutShare;

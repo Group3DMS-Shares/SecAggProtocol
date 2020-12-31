@@ -1,14 +1,14 @@
 package edu.bjut.psecagg.app;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
 
+import edu.bjut.psecagg.entity.MsgRound4;
 import edu.bjut.psecagg.entity.ParameterServer;
 import edu.bjut.psecagg.entity.Participant;
-import edu.bjut.psecagg.messages.MsgResponseRound0;
-import edu.bjut.psecagg.messages.MsgRound0;
-import edu.bjut.psecagg.messages.MsgRound1;
+import edu.bjut.psecagg.messages.*;
 import it.unisa.dia.gas.jpbc.Element;
 
 public class Aggregation {
@@ -39,11 +39,37 @@ public class Aggregation {
         return msgResponseRound0;
     }
 
-	public void shareKeys(MsgResponseRound0 msgResponse) {
-        for (var p : participants) {
+	public MsgResponseRound1 shareKeys(MsgResponseRound0 msgResponse) {
+        for (var p : this.participants) {
             MsgRound1 msgRound1 = p.sendMsgRound1(msgResponse);
+            this.parameterServer.recvMsgRound1(msgRound1);
         }
+        return this.parameterServer.sendMsgResponseRound1();
 	}
 
 
+    public MsgResponseRound2 maskedInputCollection(MsgResponseRound1 msgResponse1) {
+        for (var p : this.participants) {
+            MsgRound2 msgRound2 = p.sendMsgRound2(msgResponse1);
+            this.parameterServer.recvMsgRound2(msgRound2);
+        }
+        return this.parameterServer.sendMsgResponseRound2();
+    }
+
+    public MsgResponseRound3 consistencyCheck(MsgResponseRound2 msgResponse2) {
+        for (var p : this.participants) {
+            MsgRound3 msgRound3 = p.sendMsgRound3(msgResponse2);
+            this.parameterServer.recvMsgRound3(msgRound3);
+        }
+        return this.parameterServer.sendMsgResponseRound3();
+    }
+
+    public BigInteger unmasking(MsgResponseRound3 msgResponse3) {
+        for (var p : this.participants) {
+            MsgRound4 msgRound4 = p.sendMsgRound4(msgResponse3);
+            this.parameterServer.recvMsgRound4(msgRound4);
+        }
+
+        return this.parameterServer.outputZ();
+    }
 }

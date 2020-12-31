@@ -7,9 +7,9 @@ import java.security.SecureRandom;
 
 import org.junit.Test;
 
-import edu.bjut.common.Shamir.SecretShare;
-import edu.bjut.common.Shamir.SecretShareBigInteger;
-import edu.bjut.common.Shamir.Shamir;
+import edu.bjut.common.shamir.SecretShare;
+import edu.bjut.common.shamir.SecretShareBigInteger;
+import edu.bjut.common.shamir.Shamir;
 import it.unisa.dia.gas.jpbc.Element;
 import it.unisa.dia.gas.jpbc.Pairing;
 import it.unisa.dia.gas.plaf.jpbc.pairing.PairingFactory;

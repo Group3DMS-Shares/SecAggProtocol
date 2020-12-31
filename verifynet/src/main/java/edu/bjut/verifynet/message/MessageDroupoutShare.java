@@ -1,6 +1,6 @@
 package edu.bjut.verifynet.message;
 
-import edu.bjut.common.Shamir.SecretShareBigInteger;
+import edu.bjut.common.shamir.SecretShareBigInteger;
 
 public class MessageDroupoutShare {
     private long id;

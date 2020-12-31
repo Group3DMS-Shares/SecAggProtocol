@@ -5,9 +5,9 @@ import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 
-import edu.bjut.common.Shamir.SecretShare;
-import edu.bjut.common.Shamir.SecretShareBigInteger;
-import edu.bjut.common.Shamir.Shamir;
+import edu.bjut.common.shamir.SecretShare;
+import edu.bjut.common.shamir.SecretShareBigInteger;
+import edu.bjut.common.shamir.Shamir;
 import edu.bjut.common.messages.ParamsECC;
 import edu.bjut.common.util.Params;
 import edu.bjut.common.util.Utils;

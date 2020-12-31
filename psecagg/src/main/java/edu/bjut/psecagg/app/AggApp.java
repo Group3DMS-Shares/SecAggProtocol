@@ -1,6 +1,7 @@
 package edu.bjut.psecagg.app;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.util.ArrayList;
 
 import org.slf4j.Logger;
@@ -32,10 +33,23 @@ public class AggApp {
         aggregation.distributeSignPubKeys();
 
         // Round 0 (AdvertiseKeys)
-        var msgResponse = aggregation.advertiseKeys();
-        if (null == msgResponse) throw new RuntimeException("smaller than share threshold");
+        var msgResponse0 = aggregation.advertiseKeys();
+        if (null == msgResponse0) throw new RuntimeException("smaller than share threshold");
 
         // Round1 (ShareKeys)
-        aggregation.shareKeys(msgResponse);
+        var msgResponse1 =  aggregation.shareKeys(msgResponse0);
+        if (null == msgResponse1) throw new RuntimeException("smaller than share threshold");
+
+        // Round 2
+        var msgResponse2 = aggregation.maskedInputCollection(msgResponse1);
+        if (null == msgResponse1) throw new RuntimeException("smaller than share threshold");
+
+        // Round 3
+        var MsgResponse3 = aggregation.consistencyCheck(msgResponse2);
+        if (null == msgResponse1) throw new RuntimeException("smaller than share threshold");
+
+        // Round 4
+        BigInteger z = aggregation.unmasking(MsgResponse3);
+        LOG.info(z.toString());
     }
 }

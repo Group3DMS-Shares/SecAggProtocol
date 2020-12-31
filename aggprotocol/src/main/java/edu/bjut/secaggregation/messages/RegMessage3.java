@@ -1,6 +1,6 @@
 package edu.bjut.secaggregation.messages;
 
-import edu.bjut.common.Shamir.SecretShareBigInteger;
+import edu.bjut.common.shamir.SecretShareBigInteger;
 
 public class RegMessage3 {
     

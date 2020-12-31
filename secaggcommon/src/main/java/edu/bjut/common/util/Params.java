@@ -13,7 +13,7 @@ public class Params {
 //  public static int METERS_NUM = 20; /* number of smart meters */
 //  public static int ARRAY_OF_PARTICIPANT_NUM[] = {5,6,7,8,9,10}; /* number of smart meters */
     public static int ARRAY_OF_PARTICIPANT_NUM[] = {10}; /* number of smart meters */
-    public static int PARTICIPANT_NUM = 5; /* number of smart meters */
+    public static int PARTICIPANT_NUM = 10; /* number of smart meters */
 //  public static int ARRAY_OF_PARTICIPANT_FAILS[] = {1,2,3,4,5}; /* number of smart meters */
     public static int ARRAY_OF_PARTICIPANT_FAILS[] = {10}; /* number of smart meters */
     public static int ARRAY_OF_PARTICIPANT_FAILSII[] = {6}; /* number of smart meters */

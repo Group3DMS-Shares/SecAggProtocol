@@ -1,4 +1,4 @@
-package edu.bjut.common.Shamir;
+package edu.bjut.common.shamir;
 import java.math.BigInteger;
 
 public class SecretShareBigInteger

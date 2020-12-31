@@ -2,7 +2,7 @@ package edu.bjut.psecagg.messages;
 
 import java.util.ArrayList;
 
-import edu.bjut.common.Shamir.SecretShareBigInteger;
+import edu.bjut.common.shamir.SecretShareBigInteger;
 
 public class RegBack3 {
     private ArrayList<SecretShareBigInteger> alKeys;

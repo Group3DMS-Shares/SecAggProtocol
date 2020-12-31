@@ -13,11 +13,15 @@
   <artifactId>psecagg</artifactId>
   <version>1.0-SNAPSHOT</version>
 
-  <name>psecagg</name>
-  <!-- FIXME change it to the project's website -->
+  <name>PracticalSecAgg</name>
+  <!-- FIXME change it to the project'betaShare website -->
   <url>http://www.example.com</url>
 
   <dependencies>
+    <dependency>
+      <groupId>commons-codec</groupId>
+      <artifactId>commons-codec</artifactId>
+    </dependency>
     <dependency>
       <groupId>edu.bjut</groupId>
       <artifactId>secaggcommon</artifactId>

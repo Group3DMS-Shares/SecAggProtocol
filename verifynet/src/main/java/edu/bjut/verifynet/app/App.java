@@ -65,11 +65,11 @@ public class App
             System.out.println("User nSkn:" + users.get(0).getN_sK_n());
             droupOutUsers.add(users.remove(0).getId());
         }
-        System.out.println("User Droupout");
+        System.out.println("User dropout");
 
-        // TODO send verify additionnal information
+        // TODO send verify additional information
         for (User u : users) {
-            // user caculate gradient x_n_hat and send to server;
+            // user calculate gradient x_n_hat and send to server;
             MessageSigma mSigma = u.genMessageSigma();
             // send to server
             server.appendMessageSigma(mSigma);
