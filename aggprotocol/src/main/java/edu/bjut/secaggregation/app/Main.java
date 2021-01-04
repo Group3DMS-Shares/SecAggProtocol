@@ -31,7 +31,7 @@ public class Main {
         aggWithFails();
 
         out.close();
-//      Runtime.getRuntime().exec("shutdown -s");
+        Runtime.getRuntime().exec("shutdown -s");
     }
 
     /**

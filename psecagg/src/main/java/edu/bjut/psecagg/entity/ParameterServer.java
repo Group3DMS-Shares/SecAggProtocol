@@ -28,55 +28,33 @@ public class ParameterServer {
     private BigInteger order;
 
     // Round 0
-    private int u1Count;
-    private ArrayList<MsgRound0> msgRound0s;
-    private Map<Long, Element> cPk_uMap;
-    private Map<Long, Element> sPk_uMap;
+    private int u1Count = 0;
+    private ArrayList<MsgRound0> msgRound0s = new ArrayList<>();
+    private Map<Long, Element> cPk_uMap = new HashMap<>();
+    private Map<Long, Element> sPk_uMap = new HashMap<>();
 
     // Round 1
-    private int u2Count;
-    private ArrayList<Long> u2ids;
-    private ArrayList<MsgRound1> allMsgRound1s;
+    private int u2Count = 0;
+    private ArrayList<Long> u2ids = new ArrayList<>();
+    private ArrayList<MsgRound1> allMsgRound1s = new ArrayList<>();
 
     // Round 2
-    private int u3Count;
-    private ArrayList<Long> u3Ids;
-    private ArrayList<BigInteger> y_uList;
+    private int u3Count = 0;
+    private ArrayList<Long> u3Ids = new ArrayList<>();
+    private ArrayList<BigInteger> y_uList = new ArrayList<>();
 
     // Round 3
-    private int u4Count;
-    private ArrayList<MsgRound3> u4Sigmas;
+    private int u4Count = 0;
+    private ArrayList<MsgRound3> u4Sigmas = new ArrayList<>();
 
     // Round 4
-    Map<Long, ArrayList<SecretShareBigInteger>> buMap;
-    Map<Long, ArrayList<SecretShareBigInteger>> svnMap;
+    Map<Long, ArrayList<SecretShareBigInteger>> buMap = new HashMap<>();
+    Map<Long, ArrayList<SecretShareBigInteger>> svnMap = new HashMap<>();
 
     public ParameterServer() throws IOException {
-
-        super();
         this.pairing = PairingFactory.getPairing("aggVote1.properties");
-
         this.order = pairing.getG1().getOrder();
         this.g = this.pairing.getG1().newRandomElement().getImmutable();
-        // Round 0
-        this.u1Count = 0;
-        this.msgRound0s = new ArrayList<>();
-        this.sPk_uMap = new HashMap<>();
-        this.cPk_uMap = new HashMap<>();
-        // Round 1
-        this.u2Count = 0;
-        this.u2ids = new ArrayList<>();
-        this.allMsgRound1s = new ArrayList<>();
-        // Round 2
-        this.u3Count = 0;
-        this.u3Ids = new ArrayList<>();
-        // Round 3
-        this.u4Count = 0;
-        this.u4Sigmas = new ArrayList<>();
-        // Round 4
-        this.buMap = new HashMap<>();
-        this.svnMap = new HashMap<>();
-        this.y_uList = new ArrayList<>();
     }
 
     public ParamsECC getParamsECC() {

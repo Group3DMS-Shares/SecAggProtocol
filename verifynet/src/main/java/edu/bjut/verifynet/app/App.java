@@ -58,12 +58,12 @@ public class App
         // round 2
         System.out.println( "Round 2: Masked Input" );
 
-        // u2 droupout
-        ArrayList<Long> droupOutUsers = new ArrayList<>();
-        int droupNum = Params.PARTICIPANT_FAILS;
-        while (droupNum-- > 0) {
+        // u2 dropout
+        ArrayList<Long> dropOutUsers = new ArrayList<>();
+        int dropNum = Params.PARTICIPANT_FAILS;
+        while (dropNum-- > 0) {
             System.out.println("User nSkn:" + users.get(0).getN_sK_n());
-            droupOutUsers.add(users.remove(0).getId());
+            dropOutUsers.add(users.remove(0).getId());
         }
         System.out.println("User dropout");
 
@@ -82,14 +82,14 @@ public class App
         // user send dropout user shares
         for (User u : users) {
             ArrayList<MessageBetaShare> mBetaShares = u.sendBetaShare(); 
-            ArrayList<MessageDroupoutShare> mDroupoutShares = u.sendDropoutAndBetaShare(droupOutUsers); 
+            ArrayList<MessageDroupoutShare> mDroupoutShares = u.sendDropoutAndBetaShare(dropOutUsers);
             server.receiveMsgAggBeta(mBetaShares);
             server.receiveMsgAggDroupout(mDroupoutShares);
         }
         // broadcast the aggregation result: Sigma x_n ...
         server.broadcastToAggResultAndProof(users);
         // round 4
-        // TDO verification
+        // TODO verification
         for (User u: users) {
             if (u.verifyAggregation()) {
                 System.out.println(u.getId() + ": verify success");

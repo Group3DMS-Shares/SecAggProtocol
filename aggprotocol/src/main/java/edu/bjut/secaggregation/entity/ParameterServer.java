@@ -40,8 +40,6 @@ public class ParameterServer {
     private ArrayList<RepKeys> alRepKeys = new ArrayList<RepKeys>();
 
     public ParameterServer() throws IOException {
-
-        super();
         this.pairing = PairingFactory.getPairing("aggVote1.properties");
 
         this.id = Utils.randomlong();
@@ -177,13 +175,13 @@ public class ParameterServer {
         SecretShare[] sharesToViewSecret = new SecretShare[Params.RECOVER_K];
 
         int[] pos = getPoss();
-        
+
         for (int i = 0; i < keys.length; i++) {
             for (int j = 0; j < keys[0].length; j++) {
                 System.out.println(keys[i][j]);
             }
         }
-        
+
         for (int i = 0; i < Params.PARTICIPANT_FAILS; i++) {
             for (int j = 0; j < Params.RECOVER_K; j++) {
 
