@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
 
-import edu.bjut.psecagg.entity.MsgRound4;
+import edu.bjut.psecagg.messages.MsgRound4;
 import edu.bjut.psecagg.entity.ParameterServer;
 import edu.bjut.psecagg.entity.Participant;
 import edu.bjut.psecagg.messages.*;

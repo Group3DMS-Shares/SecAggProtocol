@@ -1,4 +1,7 @@
-package edu.bjut.psecagg.entity;
+package edu.bjut.psecagg.messages;
+
+import edu.bjut.psecagg.entity.BetaShare;
+import edu.bjut.psecagg.entity.SvuShare;
 
 import java.util.ArrayList;
 

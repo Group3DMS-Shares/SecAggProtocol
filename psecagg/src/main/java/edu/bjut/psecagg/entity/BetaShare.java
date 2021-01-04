@@ -11,15 +11,8 @@ public class BetaShare {
         return id;
     }
 
-    public void setId(long id) {
-        this.id = id;
-    }
     public SecretShareBigInteger getBetaShare() {
         return betaShare;
-    }
-
-    public void setBetaShare(SecretShareBigInteger betaShare) {
-        this.betaShare = betaShare;
     }
 
     public BetaShare(long id, SecretShareBigInteger betaShare) {

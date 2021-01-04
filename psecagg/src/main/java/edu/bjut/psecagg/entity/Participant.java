@@ -53,41 +53,9 @@ public class Participant {
     // round 3
     private ArrayList<Long> u3ids;
 
-    // round 4
-
-
-    public BigInteger getDuSk() {
-        return duSk;
-    }
-
-    public void setDuSk(BigInteger duSk) {
-        this.duSk = duSk;
-    }
-
     public Element getDuPk() {
         return duPk;
     }
-
-    public void setDuPk(Element duPk) {
-        this.duPk = duPk;
-    }
-
-    public BigInteger getcSk_u() {
-        return cSk_u;
-    }
-
-    public void setcSk_u(BigInteger cSk_u) {
-        this.cSk_u = cSk_u;
-    }
-
-    public Element getcPk_u() {
-        return cPk_u;
-    }
-
-    public void setcPk_u(Element cPk_u) {
-        this.cPk_u = cPk_u;
-    }
-
 
     public Participant(ParamsECC ps) {
 
@@ -162,7 +130,6 @@ public class Participant {
 
     public MsgRound1 sendMsgRound1(MsgResponseRound0 msgResponse) {
         var msg = msgResponse.getPubKeys();
-        // TODO verify signature
         for (var m : msg) {
             if (this.id == m.getId()) continue;
             if (verifySign(m.getId(), m.getcPk_u(), m.getsPk_u(), m.getSigma_u()) == false)
