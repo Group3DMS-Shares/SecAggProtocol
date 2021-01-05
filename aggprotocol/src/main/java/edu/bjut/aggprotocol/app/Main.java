@@ -1,4 +1,4 @@
-package edu.bjut.secaggregation.app;
+package edu.bjut.aggprotocol.app;
 
 import java.io.IOException;
 
@@ -6,16 +6,16 @@ import edu.bjut.common.messages.ParamsECC;
 import edu.bjut.common.util.Out;
 import edu.bjut.common.util.Params;
 import edu.bjut.common.util.Utils;
-import edu.bjut.secaggregation.entity.ParameterServer;
-import edu.bjut.secaggregation.entity.Participant;
-import edu.bjut.secaggregation.messages.RegBack;
-import edu.bjut.secaggregation.messages.RegBack2;
-import edu.bjut.secaggregation.messages.RegBack3;
-import edu.bjut.secaggregation.messages.RegMessage;
-import edu.bjut.secaggregation.messages.RegMessage2;
-import edu.bjut.secaggregation.messages.RegMessage3;
-import edu.bjut.secaggregation.messages.RepKeys;
-import edu.bjut.secaggregation.messages.RepMessage;
+import edu.bjut.aggprotocol.entity.ParameterServer;
+import edu.bjut.aggprotocol.entity.Participant;
+import edu.bjut.aggprotocol.messages.RegBack;
+import edu.bjut.aggprotocol.messages.RegBack2;
+import edu.bjut.aggprotocol.messages.RegBack3;
+import edu.bjut.aggprotocol.messages.RegMessage;
+import edu.bjut.aggprotocol.messages.RegMessage2;
+import edu.bjut.aggprotocol.messages.RegMessage3;
+import edu.bjut.aggprotocol.messages.RepKeys;
+import edu.bjut.aggprotocol.messages.RepMessage;
 
 public class Main {
     private static Out out;
@@ -26,7 +26,6 @@ public class Main {
 
     public static void main(String args[]) throws IOException {
 
-        out = new Out("Participants_8_2_first.time");
         // aggPhaseVaryingMeterNumber();
         aggWithFails();
 
@@ -34,12 +33,6 @@ public class Main {
         Runtime.getRuntime().exec("shutdown -s");
     }
 
-    /**
-     * simulate the multiple reporting phase a meter report multiple types of data
-     * to the server analysis.
-     * 
-     * @throws IOException
-     */
     public static void aggPhaseVaryingMeterNumber() throws IOException {
 
         printAndWrite("meter number meter number meter number");
@@ -66,31 +59,12 @@ public class Main {
             }
             printAndWrite("rep rep rep with meter number : " + num);
             printAndWriteData(totalTime / Params.EXPERIMENT_REPEART_TIMES);
-//
-//          clear();
-//          oneTimeRegTime();
-//          totalTime = 0;
-//          fails = Utils.randomFails(Params.PARTICIPANT_FAILS);
-////          for (int k = 1; k <= Params.PARTICIPANT_FAILS; k++) {
-//          for (int j = 0; j < Params.EXPERIMENT_REPEART_TIMES; j++) {
-//              totalTime += oneRepTimeWithFailedParticipant(Params.PARTICIPANT_FAILS);
-//          }
-////          }
-//          printAndWrite("rep fail rep fail rep fail with meter number : " + num);
-//          printAndWriteData(totalTime / Params.EXPERIMENT_REPEART_TIMES);
         }
     }
 
-    /**
-     * simulate the multiple reporting phase a meter report multiple types of data
-     * to the server analysis.
-     * 
-     * @throws IOException
-     */
     private static void aggWithFails() throws IOException {
         printAndWrite("meter number meter number meter number");
 
-        Params.PARTICIPANT_NUM = 20;
         for (int fail : Params.ARRAY_OF_PARTICIPANT_FAILS) {
 
             Params.PARTICIPANT_FAILS = fail;
@@ -102,34 +76,13 @@ public class Main {
             oneTimeRegTime();
 
             Params.fails = Utils.setFailedParticipants(fail);
-//          for (int k = 1; k <= Params.PARTICIPANT_FAILS; k++) {
             for (int j = 0; j < Params.EXPERIMENT_REPEART_TIMES; j++) {
                 totalTime += oneRepTimeWithFailedParticipant(fail);
             }
-//          }
             printAndWrite("rep fail rep fail rep fail with meter number : " + fail);
             printAndWriteData(totalTime / Params.EXPERIMENT_REPEART_TIMES);
         }
 
-//      for (int recover : Params.ARRAY_OF_RECOVER_K) {
-//          Params.PARTICIPANT_FAILS = 6;
-//          Params.RECOVER_K = recover;
-//          int fail  = 6;
-//          double totalTime = 0;
-//
-//          parameterServer = new ParameterServer();
-//          ParamsECC ps = parameterServer.getParamsECC();
-//          participantIntialiaztion(ps);
-//          oneTimeRegTime();
-//
-//          fails = Utils.randomFails(fail);
-//          for (int j = 0; j < Params.EXPERIMENT_REPEART_TIMES; j++) {
-//              totalTime += oneRepTimeWithFailedParticipant(fail);
-//          }
-////          }
-//          printAndWrite("rep fail rep fail rep fail with meter number : " + fail);
-//          printAndWriteData(totalTime / Params.EXPERIMENT_REPEART_TIMES);
-//      }
 
     }
 

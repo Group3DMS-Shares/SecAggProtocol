@@ -2,17 +2,23 @@ package edu.bjut.psecagg.entity;
 
 import edu.bjut.common.shamir.SecretShareBigInteger;
 
-public class UVShares {
+import java.math.BigInteger;
+import java.nio.ByteBuffer;
+
+public class UVShare {
     private long uId;
     private long vId;
     private SecretShareBigInteger b_uShare;
     private SecretShareBigInteger skShare;
 
-    public UVShares(long uId, long vId, SecretShareBigInteger b_uShare, SecretShareBigInteger skShare) {
+    public UVShare(long uId, long vId, SecretShareBigInteger b_uShare, SecretShareBigInteger skShare) {
         this.uId = uId;
         this.vId = vId;
         this.b_uShare = b_uShare;
         this.skShare = skShare;
+    }
+
+    public UVShare(byte[] bytes) {
     }
 
     public long getuId() {
@@ -45,5 +51,13 @@ public class UVShares {
 
     public void setSkShare(SecretShareBigInteger skShare) {
         this.skShare = skShare;
+    }
+
+    public byte[] getBytes() {
+        return null;
+    }
+
+    private ByteBuffer getSecretShareBytes(SecretShareBigInteger s) {
+        return null;
     }
 }

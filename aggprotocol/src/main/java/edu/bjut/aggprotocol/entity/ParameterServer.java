@@ -1,4 +1,4 @@
-package edu.bjut.secaggregation.entity;
+package edu.bjut.aggprotocol.entity;
 
 import java.io.IOException;
 import java.math.BigInteger;
@@ -10,14 +10,14 @@ import edu.bjut.common.shamir.SecretShareBigInteger;
 import edu.bjut.common.messages.ParamsECC;
 import edu.bjut.common.util.Params;
 import edu.bjut.common.util.Utils;
-import edu.bjut.secaggregation.messages.RegBack;
-import edu.bjut.secaggregation.messages.RegBack2;
-import edu.bjut.secaggregation.messages.RegBack3;
-import edu.bjut.secaggregation.messages.RegMessage;
-import edu.bjut.secaggregation.messages.RegMessage2;
-import edu.bjut.secaggregation.messages.RegMessage3;
-import edu.bjut.secaggregation.messages.RepKeys;
-import edu.bjut.secaggregation.messages.RepMessage;
+import edu.bjut.aggprotocol.messages.RegBack;
+import edu.bjut.aggprotocol.messages.RegBack2;
+import edu.bjut.aggprotocol.messages.RegBack3;
+import edu.bjut.aggprotocol.messages.RegMessage;
+import edu.bjut.aggprotocol.messages.RegMessage2;
+import edu.bjut.aggprotocol.messages.RegMessage3;
+import edu.bjut.aggprotocol.messages.RepKeys;
+import edu.bjut.aggprotocol.messages.RepMessage;
 import it.unisa.dia.gas.jpbc.Element;
 import it.unisa.dia.gas.jpbc.Pairing;
 import it.unisa.dia.gas.plaf.jpbc.pairing.PairingFactory;

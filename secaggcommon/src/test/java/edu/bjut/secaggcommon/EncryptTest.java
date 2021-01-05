@@ -1,6 +1,6 @@
-package edu.bjut.psecagg.app;
+package edu.bjut.secaggcommon;
 
-import org.apache.commons.codec.binary.Hex;
+import edu.bjut.common.aes.AesCipher;
 import org.bouncycastle.crypto.Digest;
 import org.bouncycastle.crypto.digests.SHA256Digest;
 import org.junit.Test;
@@ -9,32 +9,36 @@ import javax.crypto.*;
 import javax.crypto.spec.SecretKeySpec;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-//import org.apache.codec.binary.Hex.encodeHexString(byteArray);
+
+import static org.junit.Assert.assertEquals;
 
 public class EncryptTest {
 
     @Test
     public void testAES() throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
-        String key = "testKeyTestKey!!";
+        String key = "testKey";
         String plainStr = "hello world!";
 
         // digest
         Digest digest = new SHA256Digest();
-        byte[] plaintext = plainStr.getBytes();
-        digest.update(plaintext, 0, plaintext.length );
+        byte[] keyText = key.getBytes();
+        digest.update(keyText, 0, keyText.length );
         byte[] digestBytes = new byte[digest.getDigestSize()];
         int out = digest.doFinal(digestBytes, 0);
-        System.out.println(out);
-        System.out.println(Hex.encodeHexString(digestBytes));
+        assertEquals(digest.getDigestSize(), out);
+
         // encrypt
-        SecretKey secretKey = new SecretKeySpec(key.getBytes(), "AES");
+        SecretKey secretKey = new SecretKeySpec(digestBytes, "AES");
         Cipher cipher = Cipher.getInstance("AES");
         cipher.init(Cipher.ENCRYPT_MODE, secretKey);
-        byte[] cipherBytes = cipher.doFinal(digestBytes);
+        byte[] cipherBytes = cipher.doFinal(plainStr.getBytes());
 
         // decrypt
         cipher.init(Cipher.DECRYPT_MODE, secretKey);
         byte[] plainBytes = cipher.doFinal(cipherBytes);
-        System.out.println(Hex.encodeHexString(plainBytes));
+        assertEquals(plainStr, new String(plainBytes));
+
+        AesCipher aesCipher = new AesCipher(key);
+        assertEquals(plainStr, new String(aesCipher.decrypt(aesCipher.encrypt(plainStr.getBytes()))));
     }
 }

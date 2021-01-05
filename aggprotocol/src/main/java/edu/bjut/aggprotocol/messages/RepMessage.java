@@ -1,14 +1,15 @@
-package edu.bjut.secaggregation.messages;
+package edu.bjut.aggprotocol.messages;
 
-import edu.bjut.common.shamir.SecretShare;
+import java.math.BigInteger;
+
 import it.unisa.dia.gas.jpbc.Element;
 
-public class RepKeys {
+public class RepMessage {
     private long id;
-    private SecretShare[] ci;
+    private BigInteger ci;
     private Element si;
     private int ti;
-    public RepKeys(long id, SecretShare[] ci, Element si, int ti) {
+    public RepMessage(long id, BigInteger ci, Element si, int ti) {
         super();
         this.id = id;
         this.ci = ci;
@@ -21,10 +22,10 @@ public class RepKeys {
     public void setId(long id) {
         this.id = id;
     }
-    public SecretShare[] getCi() {
+    public BigInteger getCi() {
         return ci;
     }
-    public void setCi(SecretShare[] ci) {
+    public void setCi(BigInteger ci) {
         this.ci = ci;
     }
     public Element getSi() {

@@ -1,4 +1,4 @@
-package edu.bjut.secaggregation.messages;
+package edu.bjut.aggprotocol.messages;
 
 import it.unisa.dia.gas.jpbc.Element;
 

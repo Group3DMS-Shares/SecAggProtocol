@@ -131,7 +131,7 @@ public class ParameterServer {
         BigInteger pu = BigInteger.ZERO;
         ArrayList<Long> except = new ArrayList<>();
         for (var i : u2ids) {
-            if (u3Ids.contains(i) == false) {
+            if (u3Ids.contains(i)) {
                 except.add(i);
             }
         }
@@ -153,12 +153,13 @@ public class ParameterServer {
             for (var v : except) {
                 Element suv = this.sPk_uMap.get(v).getImmutable().mul(key);
                 BigInteger suvBig = Utils.hash2Big(suv.toString(), order);
+                LOG.debug(u + " to " + v + ": ");
                 if (u > v) {
-                    LOG.info("subtract: " + suvBig);
-                    puv = puv.add(suvBig);
-                } else {
-                    LOG.info("add: " + suvBig);
+                    LOG.debug("subtract: " + suvBig);
                     puv = puv.subtract(suvBig);
+                } else {
+                    LOG.debug("add: " + suvBig);
+                    puv = puv.add(suvBig);
                 }
             }
         }

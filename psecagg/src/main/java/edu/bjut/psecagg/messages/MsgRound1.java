@@ -1,17 +1,20 @@
 package edu.bjut.psecagg.messages;
 
-import edu.bjut.psecagg.entity.UVShares;
+import edu.bjut.psecagg.entity.CipherShare;
+import edu.bjut.psecagg.entity.UVShare;
 
 import java.util.ArrayList;
 
 public class MsgRound1 {
 
     private long id;
-    private ArrayList<UVShares> uvSharesList;
+    private ArrayList<UVShare> uvShareList;
+    private ArrayList<CipherShare> ciperShares;
 
-    public MsgRound1(long id, ArrayList<UVShares> uvSharesList) {
+    public MsgRound1(long id, ArrayList<UVShare> uvShareList, ArrayList<CipherShare> ciperShares) {
         this.id = id;
-        this.uvSharesList = uvSharesList;
+        this.uvShareList = uvShareList;
+        this.ciperShares = ciperShares;
     }
 
     public long getId() {
@@ -22,12 +25,12 @@ public class MsgRound1 {
         this.id = id;
     }
 
-    public ArrayList<UVShares> getUvSharesList() {
-        return uvSharesList;
+    public ArrayList<UVShare> getUvSharesList() {
+        return uvShareList;
     }
 
-    public void setUvSharesList(ArrayList<UVShares> uvSharesList) {
-        this.uvSharesList = uvSharesList;
+    public void setUvSharesList(ArrayList<UVShare> uvShareList) {
+        this.uvShareList = uvShareList;
     }
 
 

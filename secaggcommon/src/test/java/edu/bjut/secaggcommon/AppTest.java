@@ -1,4 +1,4 @@
-package edu.bjut;
+package edu.bjut.secaggcommon;
 
 import static org.junit.Assert.assertTrue;
 

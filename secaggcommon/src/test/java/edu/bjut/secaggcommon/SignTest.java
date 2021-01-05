@@ -1,4 +1,4 @@
-package edu.bjut.psecagg.app;
+package edu.bjut.secaggcommon;
 
 import java.math.BigInteger;
 
