@@ -1,6 +1,7 @@
 package edu.bjut.psecagg.entity;
 
 import java.math.BigInteger;
+import java.nio.ByteBuffer;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -92,19 +93,17 @@ public class Participant {
 
 
     private boolean verifySign(long id, Element lcPk_u, Element lsPk_u, Element sigma_u) {
-        StringBuilder stringBuilder = new StringBuilder();
-        String msg = stringBuilder.append(lcPk_u.toString())
-                .append(lsPk_u.toString())
-                .toString();
+        LOG.debug("verify id: " + id);
+        String msg = lcPk_u.toString() + lsPk_u.toString();
         return verify(msg, this.signPubKeys.get(id), sigma_u);
     }
 
     private boolean verify(String msg, Element pubKey, Element sigma_u) {
-        LOG.trace("verify msg: " + msg);
+        LOG.debug("verify msg: " + msg);
         Element e = Utils.hash2ElementG1(msg, this.pairing);
         Element right = this.pairing.pairing(sigma_u, g);
         Element left = this.pairing.pairing(e.duplicate(), pubKey);
-        LOG.trace("verify: " + left.toString() + ", " + right.toString());
+        LOG.debug("verify: " + left.toString() + " == " + right.toString());
         return left.toString().equals(right.toString());
     }
 
@@ -127,7 +126,7 @@ public class Participant {
     }
 
     public String getSymmetricKey(long vId) {
-        var encK = this.cPubKeys.get(vId).pow(this.cSk_u);
+        var encK = this.cPubKeys.get(vId).getImmutable().pow(this.cSk_u);
         LOG.debug("aes key (" + vId + ")v id: " + encK.toString());
         return encK.toString();
     }
@@ -162,9 +161,18 @@ public class Participant {
             try {
                 // generate symmetric key and aes encrypt
                 AesCipher aesCipher = new AesCipher(getSymmetricKey(vId));
-                UVShare uvShare = new UVShare(this.id, vId,b_uShares[i], sSk_uShares[i]);
+                ByteBuffer idBuffer = ByteBuffer.allocate(Long.BYTES).putLong(this.id);
+                ByteBuffer vIdBuffer = ByteBuffer.allocate(Long.BYTES).putLong(vId);
+                byte[] buNumer = b_uShares[i].getNumber().toByteArray();
+                byte[] buShare = b_uShares[i].getShare().toByteArray();
+                byte[] sKNumer = sSk_uShares[i].getNumber().toByteArray();
+                byte[] sKShare = sSk_uShares[i].getShare().toByteArray();
+                var cipherShare = new CipherShare(aesCipher.encrypt(idBuffer.array()), aesCipher.encrypt(vIdBuffer.array()),
+                        aesCipher.encrypt(buNumer), aesCipher.encrypt(buShare), aesCipher.encrypt(sKNumer),
+                        aesCipher.encrypt(sKShare));
+                UVShare uvShare = new UVShare(this.id, vId, b_uShares[i], sSk_uShares[i]);
                 uvShareList.add(uvShare);
-                //
+                ciperShares.add(cipherShare);
             } catch (Exception e) {
                 e.printStackTrace();
             }

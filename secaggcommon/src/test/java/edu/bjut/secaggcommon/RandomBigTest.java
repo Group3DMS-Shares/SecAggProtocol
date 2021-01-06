@@ -2,22 +2,20 @@ package edu.bjut.secaggcommon;
 
 import org.junit.Test;
 
-import java.lang.reflect.Array;
 import java.nio.charset.StandardCharsets;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertTrue;
 
-public class testRandomBig {
+public class RandomBigTest {
 
     @Test
-    public void testRandomBig() throws NoSuchAlgorithmException, NoSuchProviderException {
+    public void testRandom() throws NoSuchAlgorithmException, NoSuchProviderException {
+
         var s0 = getSecureRandom("hello");
         var s1 = getSecureRandom("hello");
         ArrayList<Integer> a1 = new ArrayList<>(Arrays.asList(s0.nextInt(), s0.nextInt()));

@@ -17,14 +17,11 @@ public class TA {
     private Pairing pairing;
     private Element g;
 
-    private long id;
-
     public TA() {
         this.pairing = PairingFactory.getPairing("aggVote1.properties");
         this.g = this.pairing.getG1().newRandomElement().getImmutable();
         this.q = this.pairing.getG1().getOrder();
         this.dj = Utils.randomBig(q);
-        this.id = Utils.randomlong();
     }
 
     public MessageKeys genUserKeyPair() {

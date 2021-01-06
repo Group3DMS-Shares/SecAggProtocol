@@ -1,7 +1,5 @@
 package edu.bjut;
 
-import java.math.BigInteger;
-
 import org.junit.Test;
 
 import it.unisa.dia.gas.jpbc.Element;

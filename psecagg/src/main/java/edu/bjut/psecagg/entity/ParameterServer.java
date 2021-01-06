@@ -144,7 +144,7 @@ public class ParameterServer {
             pu = pu.add(Shamir.combine(v.toArray(shares), order));
         }
 
-        Map<Long, BigInteger> sSk_uMap = new HashMap<>();
+        // Map<Long, BigInteger> sSk_uMap = new HashMap<>();
         BigInteger puv = BigInteger.ZERO;
         for (var e : svnMap.entrySet()) {
             long u = e.getKey();

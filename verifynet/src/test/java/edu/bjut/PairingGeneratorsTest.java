@@ -16,7 +16,7 @@ import org.junit.Test;
 
 import edu.bjut.common.util.Utils;
 
-public class PairingGenerators {
+public class PairingGeneratorsTest {
 
     @Test
     public void testGen() {

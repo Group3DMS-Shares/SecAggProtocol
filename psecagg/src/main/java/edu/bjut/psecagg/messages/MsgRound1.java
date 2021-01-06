@@ -17,6 +17,14 @@ public class MsgRound1 {
         this.ciperShares = ciperShares;
     }
 
+    public ArrayList<CipherShare> getCiperShares() {
+        return ciperShares;
+    }
+
+    public void setCiperShares(ArrayList<CipherShare> ciperShares) {
+        this.ciperShares = ciperShares;
+    }
+
     public long getId() {
         return id;
     }

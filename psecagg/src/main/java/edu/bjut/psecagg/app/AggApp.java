@@ -18,7 +18,7 @@ public class AggApp {
 
     public static void main(String args[]) throws IOException {
 
-        LOG.info("Start sec agg protocol");
+        LOG.info("Start secure aggregation protocol");
         // Setup system
         ParameterServer parameterServer= new ParameterServer();
         ArrayList<Participant> participants = new ArrayList<>();
@@ -42,14 +42,14 @@ public class AggApp {
 
         // Round 2
         var msgResponse2 = aggregation.maskedInputCollection(msgResponse1);
-        if (null == msgResponse1) throw new RuntimeException("smaller than share threshold");
+        if (null == msgResponse2) throw new RuntimeException("smaller than share threshold");
 
         // Round 3
-        var MsgResponse3 = aggregation.consistencyCheck(msgResponse2);
-        if (null == msgResponse1) throw new RuntimeException("smaller than share threshold");
+        var msgResponse3 = aggregation.consistencyCheck(msgResponse2);
+        if (null == msgResponse3) throw new RuntimeException("smaller than share threshold");
 
         // Round 4
-        BigInteger z = aggregation.unmasking(MsgResponse3);
-        LOG.info(z.toString());
+        BigInteger z = aggregation.unmasking(msgResponse3);
+        LOG.info("Aggregation results: " + z.toString());
     }
 }

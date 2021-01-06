@@ -3,7 +3,6 @@ package edu.bjut.aggprotocol.app;
 import java.io.IOException;
 
 import edu.bjut.common.messages.ParamsECC;
-import edu.bjut.common.util.Out;
 import edu.bjut.common.util.Params;
 import edu.bjut.common.util.Utils;
 import edu.bjut.aggprotocol.entity.ParameterServer;
@@ -18,7 +17,6 @@ import edu.bjut.aggprotocol.messages.RepKeys;
 import edu.bjut.aggprotocol.messages.RepMessage;
 
 public class Main {
-    private static Out out;
 
     private static ParameterServer parameterServer;
     private static Participant[] participant;
@@ -26,17 +24,11 @@ public class Main {
 
     public static void main(String args[]) throws IOException {
 
-        // aggPhaseVaryingMeterNumber();
+        aggPhaseVaryingMeterNumber();
         aggWithFails();
-
-        out.close();
-        Runtime.getRuntime().exec("shutdown -s");
     }
 
     public static void aggPhaseVaryingMeterNumber() throws IOException {
-
-        printAndWrite("meter number meter number meter number");
-
         parameterServer = new ParameterServer();
         for (int num : Params.ARRAY_OF_PARTICIPANT_NUM) {
             Params.PARTICIPANT_NUM = num;
@@ -49,7 +41,6 @@ public class Main {
                 totalTime += oneTimeRegTime();
                 clear();
             }
-            printAndWrite("reg reg reg with meter number : " + num);
             printAndWriteData(totalTime / Params.EXPERIMENT_REPEART_TIMES);
 
             oneTimeRegTime();
@@ -57,13 +48,11 @@ public class Main {
             for (int j = 0; j < Params.EXPERIMENT_REPEART_TIMES; j++) {
                 totalTime += oneTimeMeterRepTime();
             }
-            printAndWrite("rep rep rep with meter number : " + num);
             printAndWriteData(totalTime / Params.EXPERIMENT_REPEART_TIMES);
         }
     }
 
     private static void aggWithFails() throws IOException {
-        printAndWrite("meter number meter number meter number");
 
         for (int fail : Params.ARRAY_OF_PARTICIPANT_FAILS) {
 
@@ -79,7 +68,6 @@ public class Main {
             for (int j = 0; j < Params.EXPERIMENT_REPEART_TIMES; j++) {
                 totalTime += oneRepTimeWithFailedParticipant(fail);
             }
-            printAndWrite("rep fail rep fail rep fail with meter number : " + fail);
             printAndWriteData(totalTime / Params.EXPERIMENT_REPEART_TIMES);
         }
 
@@ -88,14 +76,6 @@ public class Main {
 
     private static void printAndWriteData(double totalTime) {
         System.out.println(totalTime / 1000000);
-        out.println(totalTime / 1000000);
-        printAndWrite("");
-        printAndWrite("");
-    }
-
-    private static void printAndWrite(String outStr) {
-        System.out.println(outStr);
-        out.println(outStr);
     }
 
     private static void participantIntialiaztion(ParamsECC ps) throws IOException {
