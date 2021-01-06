@@ -114,12 +114,12 @@ public class ParameterServer {
         var betaShares = msgRound4.getBetaShares();
         var svnShares = msgRound4.getSvuShares();
         betaShares.forEach(x-> {
-            if (this.buMap.get(x.getId()) == null) this.buMap.put(x.getId(), new ArrayList<>());
+            this.buMap.computeIfAbsent(x.getId(), k -> new ArrayList<>());
             this.buMap.get(x.getId()).add(x.getBetaShare());
         });
         svnShares.forEach(x-> {
-            if (this.svnMap.get(x.getId()) == null) this.svnMap.put(x.getId(), new ArrayList<>());
-            this.svnMap.get(x.getId()).add(x.getSuvShare());
+            this.svnMap.computeIfAbsent(x.getId(), k -> new ArrayList<>());
+            this.svnMap.get(x.getId()).add(x.getUShare());
         });
     }
 

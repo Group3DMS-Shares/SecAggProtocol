@@ -4,32 +4,35 @@ import org.bouncycastle.crypto.Digest;
 import org.bouncycastle.crypto.digests.SHA256Digest;
 
 import javax.crypto.*;
+import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
+import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 
 public class AesCipher {
 
-    private SecretKey key;
+    protected static int BLOCK_SIZE_BITS = 16;
+    private SecretKey keySpec;
     private Cipher cipher;
+    byte[] iv = new byte[AesCipher.BLOCK_SIZE_BITS];
 
-    public AesCipher(String keyString) throws NoSuchPaddingException, NoSuchAlgorithmException {
+    public AesCipher(String keyString, int mode) throws Exception {
         Digest digest = new SHA256Digest();
         byte[] keyText = keyString.getBytes();
-        digest.update(keyText, 0, keyText.length );
+        digest.update(keyText, 0, keyText.length);
         byte[] digestBytes = new byte[digest.getDigestSize()];
-        this.key = new SecretKeySpec(digestBytes, "AES");
-        this.cipher = Cipher.getInstance("AES");
+        this.keySpec = new SecretKeySpec(digestBytes, "AES");
+        this.cipher = Cipher.getInstance("AES/CTR/NoPadding");
+        this.cipher.init(mode, keySpec, new IvParameterSpec(iv));
     }
 
-    public byte[] encrypt(byte[] plaintext) throws InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
-        cipher.init(Cipher.ENCRYPT_MODE, key);
+    public byte[] encrypt(byte[] plaintext) throws BadPaddingException, IllegalBlockSizeException {
         byte[] cipherBytes = cipher.doFinal(plaintext);
         return cipherBytes;
     }
 
-    public byte[] decrypt(byte[] ciphertext) throws BadPaddingException, IllegalBlockSizeException, InvalidKeyException {
-        cipher.init(Cipher.DECRYPT_MODE, key);
+    public byte[] decrypt(byte[] ciphertext) throws BadPaddingException, IllegalBlockSizeException {
         byte[] plainBytes = cipher.doFinal(ciphertext);
         return plainBytes;
     }

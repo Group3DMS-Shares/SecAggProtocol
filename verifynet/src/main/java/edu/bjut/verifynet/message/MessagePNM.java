@@ -4,9 +4,9 @@ import edu.bjut.common.shamir.SecretShareBigInteger;
 
 public class MessagePNM {
     private long fromIdN;
-    private long ToIdM;
-    private SecretShareBigInteger N_Sk_n_m;
-    private SecretShareBigInteger beta_n_m;
+    private long toIdM;
+    private SecretShareBigInteger nSkNM;
+    private SecretShareBigInteger betaNM;
 
     public long getFromIdN() {
         return fromIdN;
@@ -17,34 +17,34 @@ public class MessagePNM {
     }
 
     public long getToIdM() {
-        return ToIdM;
+        return toIdM;
     }
 
     public void setToIdM(long toIdM) {
-        ToIdM = toIdM;
+        this.toIdM = toIdM;
     }
 
-    public SecretShareBigInteger getN_Sk_n_m() {
-        return N_Sk_n_m;
+    public SecretShareBigInteger getnSkNM() {
+        return nSkNM;
     }
 
-    public void setN_Sk_n_m(SecretShareBigInteger n_Sk_n_m) {
-        N_Sk_n_m = n_Sk_n_m;
+    public void setnSkNM(SecretShareBigInteger nSkNM) {
+        this.nSkNM = nSkNM;
     }
 
-    public SecretShareBigInteger getBeta_n_m() {
-        return beta_n_m;
+    public SecretShareBigInteger getBetaNM() {
+        return betaNM;
     }
 
-    public void setBeta_n_m(SecretShareBigInteger beta_n_m) {
-        this.beta_n_m = beta_n_m;
+    public void setBetaNM(SecretShareBigInteger betaNM) {
+        this.betaNM = betaNM;
     }
 
-    public MessagePNM(long fromIdN, long toIdM, SecretShareBigInteger n_Sk_n_m, SecretShareBigInteger beta_n_m) {
+    public MessagePNM(long fromIdN, long toIdM, SecretShareBigInteger nskNM, SecretShareBigInteger betaNM) {
         this.fromIdN = fromIdN;
-        ToIdM = toIdM;
-        N_Sk_n_m = n_Sk_n_m;
-        this.beta_n_m = beta_n_m;
+        this.toIdM = toIdM;
+        this.nSkNM = nskNM;
+        this.betaNM = betaNM;
     }
 
 }

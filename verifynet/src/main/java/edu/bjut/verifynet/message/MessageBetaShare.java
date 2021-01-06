@@ -7,7 +7,7 @@ public class MessageBetaShare {
     private SecretShareBigInteger betaNtoM;
 
     public MessageBetaShare(long toId, SecretShareBigInteger betaNtoM) {
-        this.setToId(toId);
+        this.toId = toId;
         this.betaNtoM = betaNtoM;
     }
 

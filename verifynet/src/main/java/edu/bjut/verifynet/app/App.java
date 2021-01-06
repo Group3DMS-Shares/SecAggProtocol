@@ -6,11 +6,9 @@ import edu.bjut.common.util.Params;
 import edu.bjut.verifynet.entity.Server;
 import edu.bjut.verifynet.entity.TA;
 import edu.bjut.verifynet.entity.User;
-import edu.bjut.verifynet.message.MessageBetaShare;
-import edu.bjut.verifynet.message.MessageDroupoutShare;
-import edu.bjut.verifynet.message.MessageKeys;
-import edu.bjut.verifynet.message.MessagePNM;
-import edu.bjut.verifynet.message.MessageSigma;
+import edu.bjut.verifynet.message.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Hello world!
@@ -18,54 +16,59 @@ import edu.bjut.verifynet.message.MessageSigma;
  */
 public class App 
 {
+    static final Logger LOG = LoggerFactory.getLogger(App.class);
     public static void main( String[] args )
     {
         // construct system
         TA ta = new TA();
         Server server = new Server();
         server.setParamsECC(ta.getParamsECC());
-        ArrayList<User> users = new ArrayList<User>();
+        ArrayList<User> users = new ArrayList<>();
         for (int i = 0; i < Params.PARTICIPANT_NUM ; ++i) users.add(new User());
 
         // round 0
-        System.out.println( "Round 0: Initialization" );
+        LOG.info( "Round 0: Initialization" );
         // key distribution
         for (User u: users) {
             MessageKeys msgKeys =  ta.genUserKeyPair();
             u.setKeys(msgKeys);
             u.setParamsECC(ta.getParamsECC());
         }
-        // TODO u1 droupout
+        // TODO u1 dropout
         for (User u: users) {
-            server.appendMessagePubkey(u.getPubKeys());
+            server.appendMessagePubKey(u.getPubKeys());
         }
-        if (false == server.checkU1Count(Params.RECOVER_K))
-            throw new RuntimeException("u1 droupout count is smaller than recovery threshold");
+        if (!server.checkU1Count(Params.RECOVER_K))
+            throw new RuntimeException("u1 dropout count is smaller than recovery threshold");
         // server broadcast
         server.broadcastTo(users);
         
         // round 1
-        System.out.println( "Round 1: Key Sharing" );
+        LOG.info( "Round 1: Key Sharing" );
         for (User u: users) {
             // user generate Beta and Pnm
-            ArrayList<MessagePNM> mPnms = u.genMsgPNMs();
+            // ArrayList<MessagePNM> mPNMs = u.genMsgPNMs();
+            ArrayList<MessageCipherPNM> mCPNMS = u.genMsgCipherPNMs();
             // send to server
-            server.appendMessagePNMs(mPnms);
-        } 
+            // server.appendMessagePNMs(mPNMs);
+            server.appendMessageCipherPNMs(mCPNMS);
+        }
 
-        server.broadcastToPMN(users);
+        // server.broadcastToPMN(users);
+        server.broadcastToCipherPMN(users);
 
         // round 2
-        System.out.println( "Round 2: Masked Input" );
+        LOG.info( "Round 2: Masked Input" );
 
         // u2 dropout
         ArrayList<Long> dropOutUsers = new ArrayList<>();
-        int dropNum = Params.PARTICIPANT_FAILS;
+        // int dropNum = Params.PARTICIPANT_FAILS;
+        int dropNum = 0;
         while (dropNum-- > 0) {
-            System.out.println("User nSkn:" + users.get(0).getN_sK_n());
+            LOG.debug("User nSkn:" + users.get(0).getN_sK_n());
             dropOutUsers.add(users.remove(0).getId());
         }
-        System.out.println("User dropout");
+        LOG.info("User dropout");
 
         // TODO send verify additional information
         for (User u : users) {
@@ -78,13 +81,15 @@ public class App
         server.broadcastToIds(users);
 
         // round 3
-        System.out.println( "Round 3: Unmasking" );
+        LOG.info( "Round 3: Unmasking" );
         // user send dropout user shares
         for (User u : users) {
-            ArrayList<MessageBetaShare> mBetaShares = u.sendBetaShare(); 
-            ArrayList<MessageDroupoutShare> mDroupoutShares = u.sendDropoutAndBetaShare(dropOutUsers);
-            server.receiveMsgAggBeta(mBetaShares);
-            server.receiveMsgAggDroupout(mDroupoutShares);
+            // var betaShares = u.sendBetaShare();
+            // var dropoutShares = u.sendDropoutAndBetaShare(dropOutUsers);
+            var betaShares  = u.sendCBetaShare();
+            var dropoutShares = u.sendCDropoutAndBetaShare(dropOutUsers);
+            server.receiveMsgAggBeta(betaShares);
+            server.receiveMsgAggDropout(dropoutShares);
         }
         // broadcast the aggregation result: Sigma x_n ...
         server.broadcastToAggResultAndProof(users);
@@ -92,9 +97,9 @@ public class App
         // TODO verification
         for (User u: users) {
             if (u.verifyAggregation()) {
-                System.out.println(u.getId() + ": verify success");
+                LOG.info(u.getId() + ": verify success");
             } else {
-                System.out.println(u.getId() + ": verify fail");
+                LOG.info(u.getId() + ": verify fail");
             }
         }
         

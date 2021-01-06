@@ -1,17 +1,17 @@
 package edu.bjut.psecagg.messages;
 
 import edu.bjut.psecagg.entity.BetaShare;
-import edu.bjut.psecagg.entity.SvuShare;
+import edu.bjut.psecagg.entity.UShare;
 
 import java.util.ArrayList;
 
 public class MsgRound4 {
     private ArrayList<BetaShare> betaShares;
-    private ArrayList<SvuShare> svuShares;
+    private ArrayList<UShare> uShares;
 
-    public MsgRound4(ArrayList<BetaShare> betaShares, ArrayList<SvuShare> svuShares) {
+    public MsgRound4(ArrayList<BetaShare> betaShares, ArrayList<UShare> uShares) {
         this.betaShares = betaShares;
-        this.svuShares = svuShares;
+        this.uShares = uShares;
     }
 
     public ArrayList<BetaShare> getBetaShares() {
@@ -22,11 +22,11 @@ public class MsgRound4 {
         this.betaShares = betaShares;
     }
 
-    public ArrayList<SvuShare> getSvuShares() {
-        return svuShares;
+    public ArrayList<UShare> getSvuShares() {
+        return uShares;
     }
 
-    public void setSvuShares(ArrayList<SvuShare> svuShares) {
-        this.svuShares = svuShares;
+    public void setSvuShares(ArrayList<UShare> uShares) {
+        this.uShares = uShares;
     }
 }

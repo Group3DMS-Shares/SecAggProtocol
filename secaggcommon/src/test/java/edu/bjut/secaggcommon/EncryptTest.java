@@ -15,7 +15,7 @@ import static org.junit.Assert.assertEquals;
 public class EncryptTest {
 
     @Test
-    public void testAES() throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
+    public void testAES() throws Exception {
         String key = "testKey";
         String plainStr = "hello world!";
 
@@ -38,7 +38,11 @@ public class EncryptTest {
         byte[] plainBytes = cipher.doFinal(cipherBytes);
         assertEquals(plainStr, new String(plainBytes));
 
-        AesCipher aesCipher = new AesCipher(key);
-        assertEquals(plainStr, new String(aesCipher.decrypt(aesCipher.encrypt(plainStr.getBytes()))));
+        AesCipher aesCipher = new AesCipher(key, Cipher.ENCRYPT_MODE);
+
+        byte[] cipherBytes1 = aesCipher.encrypt(plainStr.getBytes());
+        AesCipher aesCipher1 = new AesCipher(key, Cipher.DECRYPT_MODE);
+        byte[] plainBytes1 = aesCipher1.decrypt(cipherBytes1);
+        assertEquals(plainStr, new String(plainBytes1));
     }
 }

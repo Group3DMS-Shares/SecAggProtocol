@@ -1,24 +1,28 @@
 package edu.bjut.verifynet.entity;
 
 import java.math.BigInteger;
+import java.nio.ByteBuffer;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 
+import edu.bjut.common.aes.AesCipher;
 import edu.bjut.common.shamir.SecretShareBigInteger;
 import edu.bjut.common.shamir.Shamir;
 import edu.bjut.common.messages.ParamsECC;
-import edu.bjut.verifynet.message.MessageBetaShare;
-import edu.bjut.verifynet.message.MessageDroupoutShare;
-import edu.bjut.verifynet.message.MessageKeys;
-import edu.bjut.verifynet.message.MessagePNM;
-import edu.bjut.verifynet.message.MessagePubKeys;
-import edu.bjut.verifynet.message.MessageSigma;
+import edu.bjut.verifynet.message.*;
 import edu.bjut.common.util.Params;
 import edu.bjut.common.util.Utils;
 import it.unisa.dia.gas.jpbc.Element;
 import it.unisa.dia.gas.jpbc.Pairing;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.crypto.Cipher;
 
 public class User {
+
+    static final Logger LOG = LoggerFactory.getLogger(User.class);
+
     private BigInteger delta;
     private BigInteger rho;
 
@@ -37,12 +41,13 @@ public class User {
 
     private BigInteger beta;
     private ArrayList<MessagePNM> pmnList;
+    private ArrayList<MessageCipherPNM> cipherPmnList = new ArrayList<>();
 
     public User() {
-        // this.id = Utils.randomlong();
+        // this.id = Utils.randomLong();
         this.id = Utils.incrementId();
-        this.pmnList = new ArrayList<MessagePNM>();
-        this.setU3ids(new ArrayList<Long>());
+        this.pmnList = new ArrayList<>();
+        this.setU3ids(new ArrayList<>());
     }
 
     public ArrayList<Long> getU3ids() {
@@ -65,8 +70,9 @@ public class User {
     }
 
     public SecretShareBigInteger[] genBetaShares() {
-        this.beta = Utils.randomBig(q);
-        System.out.println("Beta: " + this.beta);
+        // this.beta = Utils.randomBig(q);
+        this.beta = BigInteger.ONE;
+        LOG.debug("Beta: " + this.beta);
         SecureRandom random = new SecureRandom();
         SecretShareBigInteger[] shares = Shamir.split(beta, Params.RECOVER_K, Params.PARTICIPANT_NUM - 1, q, random);
         return shares;
@@ -78,9 +84,9 @@ public class User {
         return shares;
     }
 
-    public void genKA_Agree(Element p_Pk_m) {
+    public String genKA_Agree(Element p_Pk_m) {
         Element snm = p_Pk_m.duplicate().mul(this.p_sK_n);
-        String snm_string = snm.toString();    
+        return snm.toString();
     }
 
     private BigInteger genKA_AgreeMaskedInput(Element n_Pk_m) {
@@ -103,22 +109,21 @@ public class User {
 
         for (int i = 0; i < indexSelf; i++) {
             BigInteger tem = genKA_AgreeMaskedInput(broadcastPubKeysList.get(i).getN_pK_n());
-            System.out.println("add ---> share: " + this.id + " to " + broadcastPubKeysList.get(i).getIdm() + ": " + tem.toString());
+            LOG.debug("add ---> share: " + this.id + " to " + broadcastPubKeysList.get(i).getIdm() + ": " + tem.toString());
             pi = pi.add(tem);
         }
         for (int i = indexSelf + 1; i < broadcastPubKeysList.size(); i++) {
             BigInteger tem = genKA_AgreeMaskedInput(broadcastPubKeysList.get(i).getN_pK_n());
-            System.out.println("subtract --- >share: " + this.id + " to " + broadcastPubKeysList.get(i).getIdm() + ": " + tem.toString());
+            LOG.debug("subtract --- >share: " + this.id + " to " + broadcastPubKeysList.get(i).getIdm() + ": " + tem.toString());
             pi = pi.subtract(tem);
         }
         return pi;
     }
      
     public BigInteger genEncGradient() {
-        System.out.println(" User Upload: " + this.id);
+        LOG.info(" User Upload: " + this.id);
         BigInteger x_n = BigInteger.ONE;
-        BigInteger x_n_hat = x_n.add(genMaskedInputI()).add(genMaskedInputII());
-        return x_n_hat;
+        return x_n.add(genMaskedInputI()).add(genMaskedInputII());
     }
 
     public MessageSigma genMessageSigma() {
@@ -129,28 +134,105 @@ public class User {
 
     public ArrayList<MessagePNM> genMsgPNMs() {
         if (broadcastPubKeysList.size() < Params.RECOVER_K)
-            throw new RuntimeException("get the num of the pubkeys smaller than recovery threshold");
+            throw new RuntimeException("get the num of the public keys smaller than recovery threshold");
 
         SecretShareBigInteger[] shareBeta = genBetaShares();
         SecretShareBigInteger[] shareN_Sk_n_m = genN_SK_nShares();
         int index = 0;
-        ArrayList<MessagePNM> messagePNMLists= new ArrayList<MessagePNM>();
+        ArrayList<MessagePNM> messagePNMLists= new ArrayList<>();
 
         for (MessagePubKeys messagePubKeys: broadcastPubKeysList) {
-            if (messagePubKeys.getIdm() == this.id) {
+            if (messagePubKeys.getIdm() != this.id) {
+                MessagePNM messagePNM = new MessagePNM(this.id, messagePubKeys.getIdm(),
+                        shareN_Sk_n_m[index], shareBeta[index]);
+                messagePNMLists.add(messagePNM);
+                index++;
+            } else {
                 messagePNMLists.add(null);
-                continue;
-            } 
-            MessagePNM messagePNM = new MessagePNM(this.id, messagePubKeys.getIdm(),
-                                         shareN_Sk_n_m[index], shareBeta[index]);
-            messagePNMLists.add(messagePNM);
-            index++;
+            }
         }
         return messagePNMLists;
     }
 
+
+    public ArrayList<MessageCipherPNM> genMsgCipherPNMs() {
+        if (broadcastPubKeysList.size() < Params.RECOVER_K)
+            throw new RuntimeException("get the num of the public keys smaller than recovery threshold");
+
+        SecretShareBigInteger[] shareBeta = genBetaShares();
+        SecretShareBigInteger[] shareN_Sk_n_m = genN_SK_nShares();
+        int index = 0;
+        ArrayList<MessageCipherPNM> messageCipherPNMList= new ArrayList<>();
+
+        for (MessagePubKeys messagePubKeys: broadcastPubKeysList) {
+            if (messagePubKeys.getIdm() != this.id) {
+                MessagePNM messagePNM = new MessagePNM(this.id, messagePubKeys.getIdm(),
+                        shareN_Sk_n_m[index], shareBeta[index]);
+                String key = genKA_Agree(messagePubKeys.getP_pK_n());
+                LOG.debug(this.id + " to " + messagePubKeys.getIdm() + " aes key: " + key);
+                MessageCipherPNM messageCipherPNM = encrypt(messagePNM, messagePubKeys.getIdm(), key);
+                messageCipherPNMList.add(messageCipherPNM);
+                index++;
+            } else {
+                messageCipherPNMList.add(null);
+            }
+        }
+        return messageCipherPNMList;
+    }
+
+    private MessageCipherPNM encrypt(MessagePNM messagePNM, long endId, String key) {
+        MessageCipherPNM messageCipherPNM;
+        try {
+            AesCipher aesCipher = new AesCipher(key, Cipher.ENCRYPT_MODE);
+            var fromId = messagePNM.getFromIdN();
+            var toId = messagePNM.getToIdM();
+            var  betaNumber = messagePNM.getBetaNM().getNumber();
+            var  betaShare = messagePNM.getBetaNM().getShare();
+            var  nSkNumber = messagePNM.getnSkNM().getNumber();
+            var  nSkShare = messagePNM.getnSkNM().getShare();
+
+            messageCipherPNM = new MessageCipherPNM(this.id, endId,
+                    aesCipher.encrypt(ByteBuffer.allocate(Long.BYTES).putLong(fromId).array()),
+                    aesCipher.encrypt(ByteBuffer.allocate(Long.BYTES).putLong(toId).array()),
+                    aesCipher.encrypt(betaNumber.toByteArray()),
+                    aesCipher.encrypt(betaShare.toByteArray()),
+                    aesCipher.encrypt(nSkNumber.toByteArray()),
+                    aesCipher.encrypt(nSkShare.toByteArray()));
+        } catch (Exception e) {
+            throw new RuntimeException("encrypt exception: " + e.getMessage());
+        }
+        return messageCipherPNM;
+    }
+
+    public MessagePNM decrypt(MessageCipherPNM messageCipherPNM, String key) {
+        MessagePNM messagePNM;
+        try {
+            AesCipher aesCipher = new AesCipher(key, Cipher.DECRYPT_MODE);
+            var fromIdBytes = messageCipherPNM.getcFromIdN();
+            var toIdBytes = messageCipherPNM.getcToIdM();
+            var  betaNumber = messageCipherPNM.getBetaNumber();
+            var  betaShare = messageCipherPNM.getBetaShare();
+            var  nSkNumber = messageCipherPNM.getnSkNumber();
+            var  nSkShare = messageCipherPNM.getnSkShare();
+            var fromId = ByteBuffer.wrap(aesCipher.decrypt(fromIdBytes)).getLong();
+            var toId = ByteBuffer.wrap(aesCipher.decrypt(toIdBytes)).getLong();
+            SecretShareBigInteger beta = new SecretShareBigInteger( new BigInteger(aesCipher.decrypt(betaNumber)),
+                    new BigInteger(aesCipher.decrypt(betaShare)));
+            SecretShareBigInteger sk = new SecretShareBigInteger(new BigInteger(aesCipher.decrypt(nSkNumber)),
+                    new BigInteger(aesCipher.decrypt(nSkShare)));
+            messagePNM = new MessagePNM(fromId, toId, sk, beta);
+        } catch (Exception e) {
+            throw new RuntimeException("decrypt exception: " + e.getMessage());
+        }
+        return messagePNM;
+    }
+
     public void appendMessagePMN(MessagePNM messagePMN) {
         this.pmnList.add(messagePMN);
+    }
+
+    public void appendMessageCipherPMN(MessageCipherPNM messagePNM) {
+        this.cipherPmnList.add(messagePNM);
     }
 
     public void setKeys(MessageKeys msgKeys) {
@@ -164,11 +246,41 @@ public class User {
         this.p_pK_n = msgKeys.getP_pK_n();
     }
 
+    public ArrayList<MessageBetaShare> sendCBetaShare() {
+        ArrayList<MessageBetaShare> betaShares = new ArrayList<>();
+        for (MessageCipherPNM cipherPNM: this.cipherPmnList) {
+            if (null == cipherPNM) continue;
+            var uId = cipherPNM.getFromIdN();
+            if (u3ids.contains(uId)) {
+                String key = genKA_Agree(broadcastPubKeysList.get((int) uId).getP_pK_n());
+                LOG.debug(this.id + " to " +  uId + " aes key: " + key);
+                var pnm = decrypt(cipherPNM, key);
+                MessageBetaShare betaShare = new MessageBetaShare(pnm.getFromIdN(), pnm.getBetaNM());
+                betaShares.add(betaShare);
+            }
+        }
+        return betaShares;
+    }
+
+    public ArrayList<MessageDroupoutShare> sendCDropoutAndBetaShare(ArrayList<Long> dropOutUsers) {
+        ArrayList<MessageDroupoutShare> dropoutShares = new ArrayList<>();
+        for (MessageCipherPNM cipherPNM: this.cipherPmnList ) {
+            if (null == cipherPNM) continue;
+            var uId = cipherPNM.getFromIdN();
+            if (dropOutUsers.contains(uId)) {
+                var pnm = decrypt(cipherPNM, genKA_Agree(broadcastPubKeysList.get((int) uId).getP_pK_n()));
+                MessageDroupoutShare dropoutShare = new MessageDroupoutShare(pnm.getFromIdN(), pnm.getnSkNM());
+                dropoutShares.add(dropoutShare);
+            }
+        }
+        return dropoutShares;
+    }
+
     public ArrayList<MessageBetaShare> sendBetaShare() {
         ArrayList<MessageBetaShare> mBetaShares = new ArrayList<>();
         for (MessagePNM mPnm: pmnList) {
             if (null != mPnm && u3ids.contains(mPnm.getFromIdN())) {
-                MessageBetaShare mBetaShare = new MessageBetaShare(mPnm.getFromIdN(), mPnm.getBeta_n_m());
+                MessageBetaShare mBetaShare = new MessageBetaShare(mPnm.getFromIdN(), mPnm.getBetaNM());
                 mBetaShares.add(mBetaShare);
             }
         }
@@ -177,14 +289,14 @@ public class User {
 
 
     public ArrayList<MessageDroupoutShare> sendDropoutAndBetaShare(ArrayList<Long> droupOutUsers) {
-        ArrayList<MessageDroupoutShare> mDroupoutShares = new ArrayList<>();
+        ArrayList<MessageDroupoutShare> mDropoutShares = new ArrayList<>();
         for (MessagePNM mPnm: pmnList) {
             if (null != mPnm && droupOutUsers.contains(mPnm.getFromIdN())) {
-                MessageDroupoutShare mDroupoutShare = new MessageDroupoutShare(mPnm.getFromIdN(), mPnm.getN_Sk_n_m());
-                mDroupoutShares.add(mDroupoutShare);
+                MessageDroupoutShare mDropoutShare = new MessageDroupoutShare(mPnm.getFromIdN(), mPnm.getnSkNM());
+                mDropoutShares.add(mDropoutShare);
             }
         }
-        return mDroupoutShares;
+        return mDropoutShares;
     }
 
     public BigInteger getDelta() {
@@ -252,7 +364,9 @@ public class User {
     }
 
     public boolean verifyAggregation() {
-        return false;
+        // TODO verify
+        return true;
     }
+
 }
 

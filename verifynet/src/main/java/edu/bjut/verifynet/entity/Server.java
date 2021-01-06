@@ -3,60 +3,65 @@ package edu.bjut.verifynet.entity;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import com.sun.jna.Structure;
 import edu.bjut.common.shamir.SecretShareBigInteger;
 import edu.bjut.common.shamir.Shamir;
 import edu.bjut.common.messages.ParamsECC;
-import edu.bjut.verifynet.message.MessageBetaShare;
-import edu.bjut.verifynet.message.MessageDroupoutShare;
-import edu.bjut.verifynet.message.MessagePNM;
-import edu.bjut.verifynet.message.MessagePubKeys;
-import edu.bjut.verifynet.message.MessageSigma;
+import edu.bjut.verifynet.message.*;
 import edu.bjut.common.util.Params;
 import edu.bjut.common.util.Utils;
 import it.unisa.dia.gas.jpbc.Element;
 import it.unisa.dia.gas.jpbc.Pairing;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Server {
-    private ArrayList<MessagePubKeys> msgPubkeysList;
+    private final static Logger LOG = LoggerFactory.getLogger(Server.class);
+    private ArrayList<MessagePubKeys> msgPubKeysList;
 
     private ArrayList<ArrayList<MessagePNM>> messagePNMsInServer;
     private ArrayList<MessageSigma> messageSigmasInServer;
     private ArrayList<Long> receiveSigmaIds;
 
     private Map<Long, ArrayList<SecretShareBigInteger>> recoverBeta;
-    private Map<Long, ArrayList<SecretShareBigInteger>> recovernSk;
+    private Map<Long, ArrayList<SecretShareBigInteger>> recoverNSk;
 
     private ParamsECC paramsECC;
     private Pairing pairing;
     private BigInteger q;
     private int u1Count;
+    private ArrayList<ArrayList<MessageCipherPNM>> messageCipherPNMs = new ArrayList<>();
 
     public Server() {
-        this.msgPubkeysList = new ArrayList<MessagePubKeys>();
-        this.messagePNMsInServer = new ArrayList<ArrayList<MessagePNM>>();
-        this.messageSigmasInServer = new ArrayList<MessageSigma>();
-        this.receiveSigmaIds = new ArrayList<Long>();
-        this.recoverBeta = new HashMap<Long, ArrayList<SecretShareBigInteger>>();
-        this.recovernSk = new HashMap<Long, ArrayList<SecretShareBigInteger>>();
+        this.msgPubKeysList = new ArrayList<>();
+        this.messagePNMsInServer = new ArrayList<>();
+        this.messageSigmasInServer = new ArrayList<>();
+        this.receiveSigmaIds = new ArrayList<>();
+        this.recoverBeta = new HashMap<>();
+        this.recoverNSk = new HashMap<>();
         this.u1Count = 0;
     }
 
     public void broadcastTo(ArrayList<User> users) {
         for (User u : users) {
-            u.setBroadcastPubKeysList(this.msgPubkeysList);
+            u.setBroadcastPubKeysList(this.msgPubKeysList);
         }
     }
 
-    public void appendMessagePubkey(MessagePubKeys messagePubKeys) {
-        this.msgPubkeysList.add(messagePubKeys);
+    public void appendMessagePubKey(MessagePubKeys messagePubKeys) {
+        this.msgPubKeysList.add(messagePubKeys);
         ++u1Count;
     }
 
     public void appendMessagePNMs(ArrayList<MessagePNM> messagePNMs) {
         this.messagePNMsInServer.add(messagePNMs);
+    }
+    public void appendMessageCipherPNMs(ArrayList<MessageCipherPNM> mCPNMS) {
+        this.messageCipherPNMs.add(mCPNMS);
     }
 
     public void appendMessageSigma(MessageSigma messageSigma) {
@@ -71,15 +76,11 @@ public class Server {
         for (MessagePNM messagePNM : messagePNMs) {
             if (null == messagePNM)
                 continue;
-            shares[count++] = messagePNM.getBeta_n_m();
+            shares[count++] = messagePNM.getBetaNM();
         }
 
         BigInteger result = Shamir.combine(shares, q);
         System.out.println(result);
-    }
-
-    public ParamsECC getParamsECC() {
-        return paramsECC;
     }
 
     public void setParamsECC(ParamsECC paramsECC) {
@@ -100,12 +101,16 @@ public class Server {
         }
     }
 
-    public void aggregateResult(ArrayList<User> users) {
-        BigInteger result = BigInteger.ZERO;
-        for (User u : users) {
-            result = result.add(u.genEncGradient());
+    public void broadcastToCipherPMN(ArrayList<User> users) {
+        for (int i = 0; i < Params.PARTICIPANT_NUM; ++i) {
+            for (int j = 0; j < Params.PARTICIPANT_NUM; ++j) {
+                if (i == j) {
+                    users.get(i).appendMessageCipherPMN(null);
+                } else {
+                    users.get(i).appendMessageCipherPMN(this.messageCipherPNMs.get(j).get(i));
+                }
+            }
         }
-        System.out.println("Aggregate: " + result);
     }
 
     public void broadcastToIds(ArrayList<User> users) {
@@ -124,41 +129,41 @@ public class Server {
         }
     }
 
-    public void receiveMsgAggDroupout(ArrayList<MessageDroupoutShare> sendDropout) {
-        for (MessageDroupoutShare mDroupoutShare : sendDropout) {
-            long id = mDroupoutShare.getId();
-            if (recovernSk.get(id) == null)
-                recovernSk.put(id, new ArrayList<>());
-            recovernSk.get(id).add(mDroupoutShare.getNsKm_NtoM());
+    public void receiveMsgAggDropout(ArrayList<MessageDroupoutShare> sendDropout) {
+        for (MessageDroupoutShare mDropoutShare : sendDropout) {
+            long id = mDropoutShare.getId();
+            if (recoverNSk.get(id) == null)
+                recoverNSk.put(id, new ArrayList<>());
+            recoverNSk.get(id).add(mDropoutShare.getNsKm_NtoM());
         }
     }
 
     private BigInteger recoverSnm() {
-        System.out.println("droupout number: " + recovernSk.size());
-        for (Long id : recovernSk.keySet()) {
-            System.out.println("droupout id:" + id);
+        System.out.println("dropout number: " + recoverNSk.size());
+        for (Long id : recoverNSk.keySet()) {
+            System.out.println("dropout id:" + id);
         }
         // recover Nsk
-        Map<Long, BigInteger> droupoutNsk = new HashMap<>();
-        for (Entry<Long, ArrayList<SecretShareBigInteger>> e : this.recovernSk.entrySet()) {
+        Map<Long, BigInteger> dropoutNsk = new HashMap<>();
+        for (Entry<Long, ArrayList<SecretShareBigInteger>> e : this.recoverNSk.entrySet()) {
             ArrayList<SecretShareBigInteger> nSkmShares = e.getValue();
             if (null != nSkmShares) {
                 SecretShareBigInteger[] shares = new SecretShareBigInteger[nSkmShares.size()];
-                System.out.println("nSkn recover");
+                LOG.debug("nSkn recover");
                 BigInteger nSk = Shamir.combine(nSkmShares.toArray(shares), this.q);
-                droupoutNsk.put(e.getKey(), nSk);
+                dropoutNsk.put(e.getKey(), nSk);
             }
         }
         BigInteger omegaSnm = BigInteger.ZERO;
-        for (Entry<Long, BigInteger> m: droupoutNsk.entrySet()) {
+        for (Entry<Long, BigInteger> m: dropoutNsk.entrySet()) {
             for (Long n: receiveSigmaIds) {
-                if (m.getKey() == n) continue;
+                if (m.getKey().equals(n)) continue;
                 // id process
-                Element nPk = msgPubkeysList.get(n.intValue()).getN_pK_n().duplicate();
+                Element nPk = msgPubKeysList.get(n.intValue()).getN_pK_n().duplicate();
                 BigInteger mSk = m.getValue();
                 Element snm = nPk.mul(mSk);
                 BigInteger s = Utils.hash2Big(snm.toString(), this.q);
-                System.out.println(n + " to " + m.getKey() + ", KA agree: " + snm);
+                LOG.info(n + " to " + m.getKey() + ", KA agree: " + snm);
 
                 if (m.getKey() < n) {
                     omegaSnm = omegaSnm.subtract(s);
@@ -167,7 +172,7 @@ public class Server {
                 }
             }
         }
-        System.out.println("omega snm: " + omegaSnm);
+        LOG.debug("omega snm: " + omegaSnm);
         return omegaSnm;
     }
 
@@ -177,7 +182,7 @@ public class Server {
             ArrayList<SecretShareBigInteger> betaShares = this.recoverBeta.get(l);
             if (null != betaShares) {
                 SecretShareBigInteger[] shares = new SecretShareBigInteger[betaShares.size()];
-                System.out.println("beta recover");
+                LOG.debug("beta recover");
                 BigInteger Beta = Shamir.combine(betaShares.toArray(shares), this.q);
                 beta = beta.add(Beta);
             }
@@ -190,18 +195,18 @@ public class Server {
         for (MessageSigma mSigma: messageSigmasInServer) {
             omegaXn = omegaXn.add(mSigma.getX_n_hat());
         }
-        BigInteger omegabeta = recoverBeta();
-        omegaXn = omegaXn.subtract(omegabeta);
+        BigInteger omegaBeta = recoverBeta();
+        omegaXn = omegaXn.subtract(omegaBeta);
         omegaXn = omegaXn.add(recoverSnm());
         return omegaXn;
     }
 
     public void broadcastToAggResultAndProof(ArrayList<User> users) {
-        System.out.println("Aggregation Result: " + calculateOmeagXn());
+        LOG.debug("Aggregation Result: " + calculateOmeagXn());
     }
 
-    public boolean checkU1Count(int rECOVER_K) {
-        return u1Count >= rECOVER_K;
+    public boolean checkU1Count(int RECOVER_K) {
+        return u1Count >= RECOVER_K;
     }
-    
+
 }
