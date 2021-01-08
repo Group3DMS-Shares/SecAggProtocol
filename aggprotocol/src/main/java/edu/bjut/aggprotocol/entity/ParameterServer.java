@@ -5,6 +5,9 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Iterator;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import edu.bjut.common.shamir.SecretShare;
 import edu.bjut.common.shamir.SecretShareBigInteger;
 import edu.bjut.common.messages.ParamsECC;
@@ -24,20 +27,25 @@ import it.unisa.dia.gas.plaf.jpbc.pairing.PairingFactory;
 
 public class ParameterServer {
 
+    private final static Logger LOG = LoggerFactory.getLogger(ParameterServer.class);
+
     private long id;
     private Pairing pairing;
     private Element g;
     private BigInteger dj;
     private BigInteger order;
 
-    ArrayList<Long> alId = new ArrayList<Long>();
-    ArrayList<Element> alKeys = new ArrayList<Element>();
-    ArrayList<Element> alQi = new ArrayList<Element>();
-    ArrayList<Element> alXi = new ArrayList<Element>();
+    ArrayList<Long> allId = new ArrayList<Long>();
+    ArrayList<Element> allKeys = new ArrayList<Element>();
+    ArrayList<Element> allQi = new ArrayList<Element>();
+    ArrayList<Element> allXi = new ArrayList<Element>();
 
-    private ArrayList<SecretShareBigInteger[]> alki = new ArrayList<SecretShareBigInteger[]>();
+    private ArrayList<SecretShareBigInteger[]> allki = new ArrayList<SecretShareBigInteger[]>();
     private ArrayList<RepMessage> alRep = new ArrayList<RepMessage>();
     private ArrayList<RepKeys> alRepKeys = new ArrayList<RepKeys>();
+
+    private boolean fails[];
+    private int failNum;
 
     public ParameterServer() throws IOException {
         this.pairing = PairingFactory.getPairing("aggVote1.properties");
@@ -49,41 +57,68 @@ public class ParameterServer {
         this.dj = Utils.randomBig(order);
     }
 
+    public void settingFails(boolean[] fails, int failNum) {
+        this.fails = fails;
+        this.failNum = failNum;
+    }
+
+
     public ParamsECC getParamsECC() {
         ParamsECC ps = new ParamsECC(this.pairing, this.g);
         return ps;
     }
 
-    // the first round of registration messages
+    
+    /** 
+     * The first round in registration phase
+     * 
+     * @param reg
+     */
     public void getRegMessage(RegMessage reg) {
-        alId.add(reg.getId());
-        alKeys.add(reg.getKey());
-        alQi.add(reg.getQi());
+        allId.add(reg.getId());
+        allKeys.add(reg.getKey());
+        allQi.add(reg.getQi());
     }
 
-    // the first round of registration messages
+    
+    /**
+     * The first round in registration phase
+     * 
+     * @param index
+     * @return RegBack
+     */
     public RegBack genRegBack(int index) {
-        int pre = (index - 1 + alKeys.size()) % alKeys.size();
-        int rear = (index + 1) % alKeys.size();
+        int pre = (index - 1 + allKeys.size()) % allKeys.size();
+        int next = (index + 1) % allKeys.size();
 
-        RegBack back = new RegBack(alQi, alKeys.get(pre), alKeys.get(rear));
+        RegBack back = new RegBack(allQi, allKeys.get(pre), allKeys.get(next));
         return back;
     }
 
-    // the second second second round of registration messages
+    
+    /** 
+     * The second round in registration phase
+     *
+     * @param reg2
+     */
     public void getRegMessage2(RegMessage2 reg2) {
-        alXi.add(reg2.getXi());
+        allXi.add(reg2.getXi());
     }
 
-    // the second second second round of registration messages
+    
+    /** 
+     * The second round in registration phase
+     *
+     * @param index
+     * @return RegBack2
+     */
     public RegBack2 genRegBack2(int index) {
-        int n = alXi.size();
+        int n = allXi.size();
         int c = n - 1;
         Element ti = pairing.getG1().newOneElement();
         for (int i = 0; i < n - 1; i++) {
-            int rear = (index + i) % alKeys.size();
-
-            Element tem = alXi.get(rear).duplicate().mul(BigInteger.valueOf(c--));
+            int next = (index + i) % allKeys.size();
+            Element tem = allXi.get(next).duplicate().mul(BigInteger.valueOf(c--));
             ti = ti.duplicate().mul(tem);
         }
 
@@ -91,16 +126,25 @@ public class ParameterServer {
         return back;
     }
 
-    // the third third third round of registration messages
+    
+    /** 
+     * The third round in registration phase
+     * 
+     * @param reg2
+     */
     public void getRegMessage3(RegMessage3 reg2) {
-        this.alki.add(reg2.getKeys());
+        this.allki.add(reg2.getKeys());
     }
 
-    // the third third third round of registration messages
+    /** 
+     * The third round in registration phase
+     * 
+     * @param reg2
+     */
     public RegBack3 genRegBack3(int i) {
         ArrayList<SecretShareBigInteger> alkiBack = new ArrayList<SecretShareBigInteger>();
 
-        Iterator<SecretShareBigInteger[]> itKi = alki.iterator();
+        Iterator<SecretShareBigInteger[]> itKi = allki.iterator();
         while (itKi.hasNext()) {
             SecretShareBigInteger tem = itKi.next()[i];
             alkiBack.add(tem);
@@ -111,7 +155,7 @@ public class ParameterServer {
 
     public RepMessage getRepMessage(RepMessage rep) throws IOException {
         alRep.add(rep);
-        if (alRep.size() < Params.PARTICIPANT_NUM)
+        if (alRep.size() < this.allId.size())
             return null;
 
         if (false == checkingIncomeMessage()) {
@@ -165,7 +209,7 @@ public class ParameterServer {
         }
 
         Iterator<RepKeys> itRepKeys = alRepKeys.iterator();
-        SecretShare[][] keys = new SecretShare[alRepKeys.size()][Params.PARTICIPANT_FAILS];
+        SecretShare[][] keys = new SecretShare[alRepKeys.size()][this.failNum];
 
         int index = 0;
         while (itRepKeys.hasNext()) {
@@ -182,7 +226,7 @@ public class ParameterServer {
             }
         }
 
-        for (int i = 0; i < Params.PARTICIPANT_FAILS; i++) {
+        for (int i = 0; i < this.failNum; i++) {
             for (int j = 0; j < Params.RECOVER_K; j++) {
 
                 BigInteger aBigInteger = keys[j][i].getNumber().multiply(BigInteger.valueOf(11));
@@ -191,8 +235,7 @@ public class ParameterServer {
                 sharesToViewSecret[j] = new SecretShare(aBigInteger, aElement);
             }
             Element tem = combine2(sharesToViewSecret);
-
-            System.out.println(" index : " + pos[i]);
+            LOG.debug("failure node: " + pos[i]);
             BigInteger pi = genPi(tem, pos[i]);
             ci = ci.add(pi);
         }
@@ -202,10 +245,10 @@ public class ParameterServer {
     }
 
     private int[] getPoss() {
-        int[] pos = new int[Params.PARTICIPANT_FAILS];
+        int[] pos = new int[failNum];
         int index = 0;
-        for (int i = 0; i < Params.fails.length; i++) {
-            if (Params.fails[i] == 1) {
+        for (int i = 0; i < failNum; i++) {
+            if (fails[i]) {
                 pos[index++] = i;
             }
         }
@@ -216,15 +259,15 @@ public class ParameterServer {
         BigInteger pi = BigInteger.ZERO;
 
         for (int i = 0; i < index; i++) {
-            Element tem = this.pairing.pairing(alQi.get(i), tems);
+            Element tem = this.pairing.pairing(allQi.get(i), tems);
             pi = pi.add(tem.toBigInteger());
         }
 
-        for (int i = index + 1; i < alQi.size(); i++) {
-            Element tem = this.pairing.pairing(alQi.get(i), tems);
+        for (int i = index + 1; i < allQi.size(); i++) {
+            Element tem = this.pairing.pairing(allQi.get(i), tems);
             pi = pi.subtract(tem.toBigInteger());
         }
-        System.out.println("pi test : " + pi.toString());
+        LOG.debug("pi test : " + pi.toString());
         return pi;
     }
 
@@ -367,12 +410,11 @@ public class ParameterServer {
         Element right = PrepareRight(alFai);
 
         if (!left.equals(right)) {
-            System.out.println("left ::: " + left);
-            System.out.println("right::: " + right);
-            System.out.println("rep rep rep not equal to left failed!");
-//          System.exit(1);
+            LOG.debug("left ::: " + left);
+            LOG.debug("right::: " + right);
+            LOG.debug("failures verification does not equal to left failed!");
         } else {
-            System.out.println("preparing data, please wait!!!");
+            LOG.debug("preparing data, please wait!!!");
         }
         return true;
     }
@@ -431,22 +473,22 @@ public class ParameterServer {
     }
 
     private Element getPublicKeyById(long id) {
-        int index = alId.indexOf(id);
-        return alKeys.get(index);
+        int index = allId.indexOf(id);
+        return allKeys.get(index);
     }
 
     private void clearReportMessage() throws IOException {
         alRep.clear();
-        alki.clear();
+        allki.clear();
         alRepKeys.clear();
     }
 
     public void clear() throws IOException {
-        alId.clear();
-        alKeys.clear();
-        alXi.clear();
-        alki.clear();
-        alQi.clear();
+        allId.clear();
+        allKeys.clear();
+        allXi.clear();
+        allki.clear();
+        allQi.clear();
     }
 
     public Element assignMeterKeys(long id2, int i) {

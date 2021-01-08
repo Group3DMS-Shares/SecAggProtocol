@@ -5,6 +5,9 @@ import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import edu.bjut.common.shamir.SecretShare;
 import edu.bjut.common.shamir.SecretShareBigInteger;
 import edu.bjut.common.shamir.Shamir;
@@ -24,6 +27,7 @@ import it.unisa.dia.gas.jpbc.Pairing;
 
 public class Participant {
 
+    private final static Logger LOG = LoggerFactory.getLogger(Participant.class);
     private long id;
     private Pairing pairing;
 
@@ -38,11 +42,10 @@ public class Participant {
     private Element g;
     private int count;
 
-    ArrayList<Element> alQi = new ArrayList<Element>();
+    ArrayList<Element> allQi = new ArrayList<Element>();
     ArrayList<SecretShareBigInteger> alKi = new ArrayList<SecretShareBigInteger>();
 
-    public Participant(ParamsECC ps, int i) throws IOException {
-        super();
+    public Participant(ParamsECC ps) throws IOException {
 
         this.id = Utils.randomlong();
         this.pairing = ps.getPairing();
@@ -57,19 +60,13 @@ public class Participant {
         this.qi = this.g.duplicate().pow(this.ki);
     }
 
-    /**
-     * A meter sends its identity and public key to aggregator for registration
-     */
     public RegMessage genRegMesssage() {
         RegMessage reg = new RegMessage(this.id, this.ri, this.qi);
         return reg;
     }
 
-    /**
-     * A meter sends its identity and public key to aggregator for registration
-     */
     public RegMessage2 getRegBack(RegBack back) {
-        alQi = back.getAlKeys();
+        allQi = back.getAlKeys();
 
         zi = back.getRi1().duplicate().mul(this.di);
         Element zi1 = back.getRiP1().duplicate().mul(this.di);
@@ -79,14 +76,10 @@ public class Participant {
         return reg;
     }
 
-    /**
-     * A meter sends its identity and public key to aggregator for registration
-     */
     public RegMessage3 getRegBack2(RegBack2 back2) {
         Element tem = this.zi.duplicate().mul(BigInteger.valueOf(Params.PARTICIPANT_NUM));
         tem.mul(back2.getTi());
         String orgStr = tem.toString();
-
         this.k = Utils.hash2Big(orgStr, this.order).longValue();
         SecretShareBigInteger[] keys = genKi(Params.PARTICIPANT_NUM);
 
@@ -100,9 +93,6 @@ public class Participant {
         return shares;
     }
 
-    /**
-     * A meter sends its identity and public key to aggregator for registration
-     */
     public void getRegBack3(RegBack3 back3) {
         this.alKi = back3.getAlKeys();
     }
@@ -111,9 +101,6 @@ public class Participant {
         return this.id;
     }
 
-    /**
-     * A meter report multiple types of data to aggregator at a time
-     */
     public RepMessage genRepMessage() throws IOException {
         if (count++ > 2401)
             count = 1;
@@ -124,27 +111,22 @@ public class Participant {
         Element si = temEle.duplicate().mul(this.di);
 
         Element hr = Utils.hash2ElementG1(Integer.toString(count), pairing);
-        System.out.println("  ki " + hr.duplicate().mul(this.ki));
-        System.out.println();
+        LOG.debug("ki: " + hr.duplicate().mul(this.ki));
 
         return new RepMessage(id, ci, si, count);
     }
 
     private BigInteger getEncryptedWeights() {
-        // System.out.println(" count : " + count);
-        BigInteger ci = BigInteger.valueOf(Utils.randomInt(100));
-        // System.out.println("ci : " + ci);
+        BigInteger ci = BigInteger.valueOf(1);
         BigInteger pi = genPi();
-        // System.out.println("pi : " + pi);
         ci = ci.add(pi);
         BigInteger ni = Utils.hash2Big(Long.toString(this.k + this.count), this.order);
         ci = ci.add(ni);
-        // System.out.println("ni : " + ni );
         return ci;
     }
 
     // generates the keys
-    public RepKeys genRepKeys(int fails[], int num) throws IOException {
+    public RepKeys genRepKeys(boolean fails[], int num) throws IOException {
         SecretShare[] ci = getShares(fails, num);
 
         Element temEle = Utils.hash2ElementG1(ci.toString() + id + count, this.pairing);
@@ -152,13 +134,13 @@ public class Participant {
         return new RepKeys(id, ci, si, count);
     }
 
-    private SecretShare[] getShares(int fails[], int num) {
+    private SecretShare[] getShares(boolean fails[], int num) {
         SecretShare[] ci = new SecretShare[num];
         int index = 0;
         Element hr = Utils.hash2ElementG1(Integer.toString(count), pairing);
 
         for (int i = 0; i < fails.length; i++) {
-            if (fails[i] == 1) {
+            if (fails[i]) {
                 Element temEle = hr.duplicate().mul(alKi.get(i).getShare());
                 ci[index++] = new SecretShare(alKi.get(i).getNumber(), temEle);
             }
@@ -168,15 +150,15 @@ public class Participant {
 
     private BigInteger genPi() {
         BigInteger pi = BigInteger.ZERO;
-        int index = alQi.indexOf(this.qi);
+        int index = allQi.indexOf(this.qi);
         Element hr = Utils.hash2ElementG1(Integer.toString(count), pairing);
 
         for (int i = 0; i < index; i++) {
-            Element tem = this.pairing.pairing(alQi.get(i), hr).duplicate().mul(this.ki);
+            Element tem = this.pairing.pairing(allQi.get(i), hr).duplicate().mul(this.ki);
             pi = pi.add(tem.toBigInteger());
         }
-        for (int i = index + 1; i < alQi.size(); i++) {
-            Element tem = this.pairing.pairing(alQi.get(i), hr).duplicate().mul(this.ki);
+        for (int i = index + 1; i < allQi.size(); i++) {
+            Element tem = this.pairing.pairing(allQi.get(i), hr).duplicate().mul(this.ki);
             pi = pi.subtract(tem.toBigInteger());
         }
         return pi;
@@ -184,14 +166,14 @@ public class Participant {
 
     public void getRepMessage(RepMessage rep) throws IOException {
         BigInteger ni = Utils.hash2Big(Long.toString(this.k + this.count), this.order);
-        ni = ni.multiply(BigInteger.valueOf(Params.PARTICIPANT_NUM));
-        System.out.println("data : " + rep.getCi().subtract(ni));
+        ni = ni.multiply(BigInteger.valueOf(this.allQi.size()));
+        LOG.info("data: " + rep.getCi().subtract(ni));
     }
 
-    public void getRepMessageFails(RepMessage rep) throws IOException {
+    public void getRepMessageFails(RepMessage rep, int failNum) throws IOException {
         BigInteger ni = Utils.hash2Big(Long.toString(this.k + this.count), this.order);
-        ni = ni.multiply(BigInteger.valueOf(Params.PARTICIPANT_NUM - Params.PARTICIPANT_FAILS));
-        System.out.println("data : " + (rep.getCi().subtract(ni)).mod(this.order));
+        ni = ni.multiply(BigInteger.valueOf(this.allQi.size() - failNum));
+        LOG.info("data: " + (rep.getCi().subtract(ni)).mod(this.order));
     }
 
 }

@@ -55,22 +55,21 @@ public class Utils {
      * @param input null
      * @return int
      */
-    public static int[] setFailedParticipants(int num) {
-        Random rnd = new Random();
-        long seed = System.nanoTime();
-        rnd.setSeed(seed);
-        int[] result = new int[Params.PARTICIPANT_NUM];
-        for (int i = 0; i < num; i++) {
-            while (true) {
-                int index = rnd.nextInt(Params.PARTICIPANT_NUM);
-                if (result[index] == 1)
-                    continue;
-                result[index] = 1;
-                System.out.println("failed index : " + index);
-                break;
+    public static boolean[] setFailedParticipants(int fail, int length) {
+        boolean[] results = new boolean[length];
+        if (fail >= length) {
+            for (var i = 0; i < fail; ++i) results[i] = true;
+        } else {
+            Random rnd = new Random();
+            while (fail > 0) {
+                int index = rnd.nextInt(length - 1);
+                if (!results[index]) {
+                    results[index] = true;
+                    --fail;
+                }
             }
         }
-        return result;
+        return results;
     }
 
     /**
