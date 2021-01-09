@@ -247,7 +247,7 @@ public class ParameterServer {
     private int[] getPoss() {
         int[] pos = new int[failNum];
         int index = 0;
-        for (int i = 0; i < failNum; i++) {
+        for (int i = 0; i < this.fails.length; i++) {
             if (fails[i]) {
                 pos[index++] = i;
             }

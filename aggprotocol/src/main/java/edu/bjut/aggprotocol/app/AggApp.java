@@ -22,7 +22,7 @@ public class AggApp {
         // registration phrase
         improveAggregation.registrationPhase();
         // data aggregation
-        improveAggregation.dataAggregation(1);
+        improveAggregation.dataAggregation(3);
 
     }
 }
