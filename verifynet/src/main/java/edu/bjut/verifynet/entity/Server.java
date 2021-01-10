@@ -139,10 +139,7 @@ public class Server {
     }
 
     private BigInteger recoverSnm() {
-        System.out.println("dropout number: " + recoverNSk.size());
-        for (Long id : recoverNSk.keySet()) {
-            System.out.println("dropout id:" + id);
-        }
+        LOG.info("dropout number: " + recoverNSk.size());
         // recover Nsk
         Map<Long, BigInteger> dropoutNsk = new HashMap<>();
         for (Entry<Long, ArrayList<SecretShareBigInteger>> e : this.recoverNSk.entrySet()) {

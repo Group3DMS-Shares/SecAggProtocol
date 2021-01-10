@@ -21,6 +21,11 @@
 
   <dependencies>
     <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-core</artifactId>
+  </dependency>
+  
+    <dependency>
       <groupId>edu.bjut</groupId>
       <artifactId>secaggcommon</artifactId>
       <version>${project.version}</version>

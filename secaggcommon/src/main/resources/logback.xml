@@ -6,7 +6,7 @@
       <Pattern>%cyan(%d{HH:mm:ss.SSS}) %gray([%thread]) %highlight(%-5level) %magenta(%logger{36}) - %msg%n</Pattern>
     </encoder>
   </appender>
-  <logger name = "edu.bjut" level="debug"/>
+  <logger name = "edu.bjut" level="warn"/>
 
   <root level="debug">
     <appender-ref ref="STDOUT" />

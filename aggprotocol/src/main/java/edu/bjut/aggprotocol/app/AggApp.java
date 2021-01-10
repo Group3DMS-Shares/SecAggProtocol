@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.util.StopWatch;
+
 import edu.bjut.common.util.Params;
 import edu.bjut.aggprotocol.entity.ParameterServer;
 import edu.bjut.aggprotocol.entity.Participant;
@@ -19,10 +21,14 @@ public class AggApp {
             participants.add(new Participant(ps));
         }
         ImproveAggregation improveAggregation = new ImproveAggregation(parameterServer, participants);
+        StopWatch stopWatch = new StopWatch();
+        stopWatch.start();
         // registration phrase
         improveAggregation.registrationPhase();
         // data aggregation
-        improveAggregation.dataAggregation(3);
+        improveAggregation.dataAggregation(0);
+        stopWatch.stop();
+        System.out.println(stopWatch.getTotalTimeMillis());
 
     }
 }

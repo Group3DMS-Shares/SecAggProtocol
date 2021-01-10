@@ -6,6 +6,7 @@ import java.util.ArrayList;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.StopWatch;
 
 import edu.bjut.common.messages.ParamsECC;
 import edu.bjut.common.util.Params;
@@ -31,7 +32,8 @@ public class AggApp {
 
         // Distribute sign public keys to all user
         aggregation.distributeSignPubKeys();
-
+        StopWatch stopWatch = new StopWatch();
+        stopWatch.start();
         // Round 0 (AdvertiseKeys)
         var msgResponse0 = aggregation.advertiseKeys();
         if (null == msgResponse0) throw new RuntimeException("smaller than share threshold");
@@ -51,5 +53,7 @@ public class AggApp {
         // Round 4
         BigInteger z = aggregation.unmasking(msgResponse3);
         LOG.info("Aggregation results: " + z.toString());
+        stopWatch.stop();
+        LOG.warn("" + stopWatch.getLastTaskTimeMillis());
     }
 }

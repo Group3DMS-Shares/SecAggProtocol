@@ -49,7 +49,7 @@ public class Aggregation {
 
 
     public MsgResponseRound2 maskedInputCollection(MsgResponseRound1 msgResponse1) {
-        for (int i = 0; i < this.participants.size() - 1; ++i) {
+        for (int i = 0; i < this.participants.size(); ++i) {
             MsgRound2 msgRound2 = this.participants.get(i).sendMsgRound2(msgResponse1);
             this.parameterServer.recvMsgRound2(msgRound2);
         }

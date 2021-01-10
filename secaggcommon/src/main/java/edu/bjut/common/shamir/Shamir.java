@@ -59,7 +59,6 @@ public final class Shamir {
 
             accum = prime.add(accum).add(tmp).mod(prime);
         }
-        System.out.println("The secret is: " + accum + "\n");
         return accum;
     }
 
@@ -87,7 +86,6 @@ public final class Shamir {
             Element temEle = value.duplicate().mul(tmp);
             accum = accum.duplicate().add(temEle);
         }
-        System.out.println("The secret is: " + accum + "\n");
         return accum;
     }
 

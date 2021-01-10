@@ -9,6 +9,7 @@ import edu.bjut.verifynet.entity.User;
 import edu.bjut.verifynet.message.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.StopWatch;
 
 /**
  * Hello world!
@@ -25,7 +26,8 @@ public class App
         server.setParamsECC(ta.getParamsECC());
         ArrayList<User> users = new ArrayList<>();
         for (int i = 0; i < Params.PARTICIPANT_NUM ; ++i) users.add(new User());
-
+        StopWatch stopWatch = new StopWatch();
+        stopWatch.start();
         // round 0
         LOG.info( "Round 0: Initialization" );
         // key distribution
@@ -93,6 +95,8 @@ public class App
         }
         // broadcast the aggregation result: Sigma x_n ...
         server.broadcastToAggResultAndProof(users);
+        stopWatch.stop();
+        LOG.warn("" + stopWatch.getLastTaskTimeMillis());
         // round 4
         // TODO verification
         for (User u: users) {

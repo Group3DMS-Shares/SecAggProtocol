@@ -17,6 +17,10 @@
   <description>secure aggregation common</description>
   <dependencies>
     <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-core</artifactId>
+    </dependency>
+    <dependency>
       <groupId>com.github.emilianobonassi</groupId>
       <artifactId>jpbc</artifactId>
     </dependency>

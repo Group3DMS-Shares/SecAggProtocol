@@ -31,17 +31,18 @@ public class ShamirTest {
         // 5 - there are 5 persons that get secret parts
         final SecretShareBigInteger[] shares = Shamir.split(secret, 2, 50, prime, random);
 
+        BigInteger orgResult = Shamir.combine(shares, prime);
+        System.out.println("orginal result secret is: " + orgResult.toString());
+
         // we can use any combination of 2 or more parts of secret
         int length = 5;
         SecretShare[] sharesToViewSecret = new SecretShare[length];
         for (int i = 0; i < length; ++i) {
-            sharesToViewSecret[i] = new SecretShare(shares[i].getNumber().multiply(BigInteger.valueOf(10)), g.duplicate().mul(shares[i].getShare()));
+            sharesToViewSecret[i] = new SecretShare(shares[i].getNumber(), g.duplicate().mul(shares[i].getShare()));
         }
-
-        BigInteger orgResult = Shamir.combine(shares, prime);
-        System.out.println("orgResult secret is: " + orgResult.toString());
-        
         Element result = Shamir.combine2(sharesToViewSecret, pairing, g, prime);
+
+        
         String org = g.duplicate().mul(secret).toString();
         System.out.println("org secret is: " + org);
         assertTrue(result.toString().equals(org));
