@@ -8,7 +8,7 @@ public class RandomIdTest {
     
     @Test
     public void randomIdString() {
-        for (int i = 0; i < 100; ++i) {
+        for (int i = 0; i < 1; ++i) {
             long id = Utils.randomlong();
             System.out.println(String.valueOf(id));
             System.out.println(String.valueOf(id).length());

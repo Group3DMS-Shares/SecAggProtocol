@@ -12,13 +12,28 @@ import edu.bjut.common.messages.ParamsECC;
 import edu.bjut.common.util.Params;
 import edu.bjut.psecagg.entity.ParameterServer;
 import edu.bjut.psecagg.entity.Participant;
+import net.sourceforge.argparse4j.ArgumentParsers;
+import net.sourceforge.argparse4j.inf.ArgumentParser;
+import net.sourceforge.argparse4j.inf.Namespace;
 
 public class AggApp {
 
     static final Logger LOG = LoggerFactory.getLogger(AggApp.class);
 
     public static void main(String args[]) throws IOException {
-
+        // args setting
+        ArgumentParser parser = ArgumentParsers.newFor("Params Setting").build().defaultHelp(true)
+                .description("experiment setting: user number, failure number, gradient number");
+        parser.addArgument("-u", "--user").type(Integer.class).help("Specify user number");
+        parser.addArgument("-f", "--failure").setDefault(0).type(Integer.class).help("Specify dropout user number");
+        Namespace ns = parser.parseArgsOrFail(args);
+        Integer userNum = ns.getInt("user");
+        Integer failNum = ns.getInt("failure");
+        if (userNum == null || failNum == null) {
+            parser.printHelp();
+            System.exit(0);
+        }
+        Params.PARTICIPANT_NUM = userNum;
         LOG.info("Start secure aggregation protocol");
         // Setup system
         ParameterServer parameterServer= new ParameterServer();

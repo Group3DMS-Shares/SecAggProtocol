@@ -7,19 +7,32 @@ import edu.bjut.verifynet.entity.Server;
 import edu.bjut.verifynet.entity.TA;
 import edu.bjut.verifynet.entity.User;
 import edu.bjut.verifynet.message.*;
+import net.sourceforge.argparse4j.ArgumentParsers;
+import net.sourceforge.argparse4j.inf.ArgumentParser;
+import net.sourceforge.argparse4j.inf.Namespace;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.StopWatch;
 
-/**
- * Hello world!
- *
- */
 public class App 
 {
     static final Logger LOG = LoggerFactory.getLogger(App.class);
     public static void main( String[] args )
     {
+        // args setting
+        ArgumentParser parser = ArgumentParsers.newFor("Params Setting").build().defaultHelp(true)
+                .description("experiment setting: user number, failure number, gradient number");
+        parser.addArgument("-u", "--user").type(Integer.class).help("Specify user number");
+        parser.addArgument("-f", "--failure").setDefault(0).type(Integer.class).help("Specify dropout user number");
+        Namespace ns = parser.parseArgsOrFail(args);
+        Integer userNum = ns.getInt("user");
+        Integer failNum = ns.getInt("failure");
+        if (userNum == null || failNum == null) {
+            parser.printHelp();
+            System.exit(0);
+        }
+        Params.PARTICIPANT_NUM = userNum;
         // construct system
         TA ta = new TA();
         Server server = new Server();

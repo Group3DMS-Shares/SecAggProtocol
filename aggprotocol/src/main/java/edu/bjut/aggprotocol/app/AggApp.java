@@ -9,6 +9,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.util.StopWatch;
 
 import edu.bjut.common.util.Params;
+import net.sourceforge.argparse4j.ArgumentParsers;
+import net.sourceforge.argparse4j.impl.Arguments;
+import net.sourceforge.argparse4j.inf.ArgumentParser;
+import net.sourceforge.argparse4j.inf.Namespace;
 import edu.bjut.aggprotocol.entity.ParameterServer;
 import edu.bjut.aggprotocol.entity.Participant;
 
@@ -17,6 +21,19 @@ public class AggApp {
     static final Logger LOG = LoggerFactory.getLogger(AggApp.class);
 
     public static void main(String args[]) throws IOException {
+        // args setting
+        ArgumentParser parser = ArgumentParsers.newFor("Params Setting").build().defaultHelp(true)
+                .description("experiment setting: user number, failure number, gradient number");
+        parser.addArgument("-u", "--user").type(Integer.class).help("Specify user number");
+        parser.addArgument("-f", "--failure").setDefault(0).type(Integer.class).help("Specify dropout user number");
+        Namespace ns = parser.parseArgsOrFail(args);
+        Integer userNum = ns.getInt("user");
+        Integer failNum = ns.getInt("failure");
+        if (userNum == null || failNum == null) {
+            parser.printHelp();
+            System.exit(0);
+        }
+        Params.PARTICIPANT_NUM = userNum;
         // system setup
         var parameterServer = new ParameterServer();
         List<Participant> participants = new ArrayList<>();
@@ -34,4 +51,6 @@ public class AggApp {
         stopWatch.stop();
         LOG.warn("" + stopWatch.getLastTaskTimeMillis());
     }
+    
+    
 }
