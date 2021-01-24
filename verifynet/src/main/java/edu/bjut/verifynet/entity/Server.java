@@ -3,14 +3,12 @@ package edu.bjut.verifynet.entity;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import com.sun.jna.Structure;
+import edu.bjut.common.messages.ParamsECC;
 import edu.bjut.common.shamir.SecretShareBigInteger;
 import edu.bjut.common.shamir.Shamir;
-import edu.bjut.common.messages.ParamsECC;
 import edu.bjut.verifynet.message.*;
 import edu.bjut.common.util.Params;
 import edu.bjut.common.util.Utils;
@@ -30,7 +28,6 @@ public class Server {
     private Map<Long, ArrayList<SecretShareBigInteger>> recoverBeta;
     private Map<Long, ArrayList<SecretShareBigInteger>> recoverNSk;
 
-    private ParamsECC paramsECC;
     private Pairing pairing;
     private BigInteger q;
     private int u1Count;
@@ -84,7 +81,6 @@ public class Server {
     }
 
     public void setParamsECC(ParamsECC paramsECC) {
-        this.paramsECC = paramsECC;
         this.pairing = paramsECC.getPairing();
         this.q = this.pairing.getG1().getOrder();
     }

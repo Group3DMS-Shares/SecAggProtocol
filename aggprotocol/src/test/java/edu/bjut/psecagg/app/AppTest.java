@@ -1,8 +1,6 @@
 package edu.bjut.psecagg.app;
 
 import java.math.BigInteger;
-import java.net.URL;
-
 import org.junit.Test;
 
 import edu.bjut.common.util.Utils;
