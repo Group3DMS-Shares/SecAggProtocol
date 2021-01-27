@@ -12,7 +12,6 @@ import it.unisa.dia.gas.plaf.jpbc.pairing.PairingFactory;
 public class TA {
 
     private BigInteger q;
-    private BigInteger dj;
 
     private Pairing pairing;
     private Element g;
@@ -21,7 +20,6 @@ public class TA {
         this.pairing = PairingFactory.getPairing("aggVote1.properties");
         this.g = this.pairing.getG1().newRandomElement().getImmutable();
         this.q = this.pairing.getG1().getOrder();
-        this.dj = Utils.randomBig(q);
     }
 
     public MessageKeys genUserKeyPair() {

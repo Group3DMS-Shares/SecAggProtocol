@@ -115,7 +115,24 @@ public class Utils {
         return ranBig;
     }
 
-    
+    public static BigInteger[] vecAdd(BigInteger[] a, BigInteger[] b) {
+        int len = a.length;
+        BigInteger[] c = new BigInteger[len];
+        for (int i = 0; i < len; ++i) {
+            c[i] = a[i].add(b[i]);
+        }
+        return c;
+    }
+
+    public static BigInteger[] vecSubtract(BigInteger[] a, BigInteger[] b) {
+        int len = a.length;
+        BigInteger[] c = new BigInteger[len];
+        for (int i = 0; i < len; ++i) {
+            c[i] = a[i].subtract(b[i]);
+        }
+        return c;
+    }
+
     private static long count = 0;
 
     public static long incrementId() {

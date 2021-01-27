@@ -1,19 +1,24 @@
 package edu.bjut.verifynet.entity;
 
 import java.math.BigInteger;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import edu.bjut.common.big.BigVec;
 import edu.bjut.common.messages.ParamsECC;
 import edu.bjut.common.shamir.SecretShareBigInteger;
 import edu.bjut.common.shamir.Shamir;
 import edu.bjut.verifynet.message.*;
+import edu.bjut.common.util.PRG;
 import edu.bjut.common.util.Params;
 import edu.bjut.common.util.Utils;
 import it.unisa.dia.gas.jpbc.Element;
 import it.unisa.dia.gas.jpbc.Pairing;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,6 +62,7 @@ public class Server {
     public void appendMessagePNMs(ArrayList<MessagePNM> messagePNMs) {
         this.messagePNMsInServer.add(messagePNMs);
     }
+
     public void appendMessageCipherPNMs(ArrayList<MessageCipherPNM> mCPNMS) {
         this.messageCipherPNMs.add(mCPNMS);
     }
@@ -77,7 +83,7 @@ public class Server {
         }
 
         BigInteger result = Shamir.combine(shares, q);
-        System.out.println(result);
+        LOG.info(result.toString());
     }
 
     public void setParamsECC(ParamsECC paramsECC) {
@@ -134,7 +140,7 @@ public class Server {
         }
     }
 
-    private BigInteger recoverSnm() {
+    private BigVec recoverSnm(int gSize) throws NoSuchAlgorithmException, NoSuchProviderException {
         LOG.info("dropout number: " + recoverNSk.size());
         // recover Nsk
         Map<Long, BigInteger> dropoutNsk = new HashMap<>();
@@ -147,21 +153,23 @@ public class Server {
                 dropoutNsk.put(e.getKey(), nSk);
             }
         }
-        BigInteger omegaSnm = BigInteger.ZERO;
-        for (Entry<Long, BigInteger> m: dropoutNsk.entrySet()) {
-            for (Long n: receiveSigmaIds) {
-                if (m.getKey().equals(n)) continue;
+        BigVec omegaSnm = BigVec.Zero(gSize);
+        for (Entry<Long, BigInteger> m : dropoutNsk.entrySet()) {
+            for (Long n : receiveSigmaIds) {
+                if (m.getKey().equals(n))
+                    continue;
                 // id process
                 Element nPk = msgPubKeysList.get(n.intValue()).getN_pK_n().duplicate();
                 BigInteger mSk = m.getValue();
                 Element snm = nPk.mul(mSk);
                 BigInteger s = Utils.hash2Big(snm.toString(), this.q);
                 LOG.info(n + " to " + m.getKey() + ", KA agree: " + snm);
-
+                PRG p = new PRG(s.toString());
+                var bigs = p.genBigs(gSize);
                 if (m.getKey() < n) {
-                    omegaSnm = omegaSnm.subtract(s);
+                    omegaSnm = omegaSnm.subtract(new BigVec(bigs));
                 } else {
-                    omegaSnm = omegaSnm.add(s);
+                    omegaSnm = omegaSnm.add(new BigVec(bigs));
                 }
             }
         }
@@ -169,33 +177,45 @@ public class Server {
         return omegaSnm;
     }
 
-    private BigInteger recoverBeta() {
-        BigInteger beta = BigInteger.ZERO;
-        for (Long l: this.recoverBeta.keySet()) {
+    private BigInteger[] recoverBeta() {
+        BigInteger[] beta = new BigInteger[this.recoverBeta.size()];
+        int index = 0;
+        for (Long l : this.recoverBeta.keySet()) {
             ArrayList<SecretShareBigInteger> betaShares = this.recoverBeta.get(l);
             if (null != betaShares) {
                 SecretShareBigInteger[] shares = new SecretShareBigInteger[betaShares.size()];
-                LOG.debug("beta recover");
                 BigInteger Beta = Shamir.combine(betaShares.toArray(shares), this.q);
-                beta = beta.add(Beta);
+                beta[index++] = Beta;
             }
         }
         return beta;
     }
 
-    public BigInteger calculateOmeagXn() {
-        BigInteger omegaXn = BigInteger.ZERO;
+    public BigVec calculateOmeagXn() throws NoSuchAlgorithmException, NoSuchProviderException {
+        int gLen = messageSigmasInServer.get(0).getX_n_hat().size();
+        BigVec omegaXn = BigVec.Zero(gLen);
+
         for (MessageSigma mSigma: messageSigmasInServer) {
             omegaXn = omegaXn.add(mSigma.getX_n_hat());
         }
-        BigInteger omegaBeta = recoverBeta();
-        omegaXn = omegaXn.subtract(omegaBeta);
-        omegaXn = omegaXn.add(recoverSnm());
+
+        LOG.debug("sum: " + omegaXn);
+        
+        BigInteger[] omegaBeta = recoverBeta();
+        for (int i = 0; i < omegaBeta.length; ++i) {
+            LOG.debug("recover beta: " + omegaBeta[i]);
+            PRG prg = new PRG(omegaBeta[i].toString());
+            var x = new BigVec(prg.genBigs(gLen));
+            omegaXn = omegaXn.subtract(x);
+            LOG.debug("subtract beta: " + x);
+        }
+        omegaXn = omegaXn.add(recoverSnm(gLen));
         return omegaXn;
     }
 
-    public void broadcastToAggResultAndProof(ArrayList<User> users) {
-        LOG.debug("Aggregation Result: " + calculateOmeagXn());
+    public void broadcastToAggResultAndProof(ArrayList<User> users)
+            throws NoSuchAlgorithmException, NoSuchProviderException {
+            LOG.info("Aggregation Result: " + calculateOmeagXn());
     }
 
     public boolean checkU1Count(int RECOVER_K) {

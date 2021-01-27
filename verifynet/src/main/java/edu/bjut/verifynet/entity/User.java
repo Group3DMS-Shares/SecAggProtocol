@@ -2,14 +2,18 @@ package edu.bjut.verifynet.entity;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 
 import edu.bjut.common.aes.AesCipher;
+import edu.bjut.common.big.BigVec;
 import edu.bjut.common.shamir.SecretShareBigInteger;
 import edu.bjut.common.shamir.Shamir;
 import edu.bjut.common.messages.ParamsECC;
 import edu.bjut.verifynet.message.*;
+import edu.bjut.common.util.PRG;
 import edu.bjut.common.util.Params;
 import edu.bjut.common.util.Utils;
 import it.unisa.dia.gas.jpbc.Element;
@@ -31,25 +35,26 @@ public class User {
 
     private BigInteger p_sK_n;
     private Element p_pK_n;
-    private long id;
+    private long id = Utils.incrementId();
     private ArrayList<MessagePubKeys> broadcastPubKeysList;
-    private ArrayList<Long> u3ids;
+    private ArrayList<Long> u3ids = new ArrayList<>();
 
     private Pairing pairing;
-    private Element g;
     private BigInteger q;
 
     private BigInteger beta;
-    private ArrayList<MessagePNM> pmnList;
+    private ArrayList<MessagePNM> pmnList = new ArrayList<>();
     private ArrayList<MessageCipherPNM> cipherPmnList = new ArrayList<>();
 
-    public User() {
-        // this.id = Utils.randomLong();
-        this.id = Utils.incrementId();
-        this.pmnList = new ArrayList<>();
-        this.setU3ids(new ArrayList<>());
-    }
+    private BigVec xN = BigVec.One(1);
+    private int gLen = 1;
 
+    public User() { }
+
+    public User(int len) {
+        this.gLen = len;
+        this.xN = BigVec.One(len);
+    }
     public ArrayList<Long> getU3ids() {
         return u3ids;
     }
@@ -60,7 +65,6 @@ public class User {
 
     public void setParamsECC(ParamsECC paramsECC) {
         this.pairing = paramsECC.getPairing();
-        this.g = paramsECC.getGeneratorOfG1();
         this.q = this.pairing.getG1().getOrder();
     }
 
@@ -70,7 +74,7 @@ public class User {
     }
 
     public SecretShareBigInteger[] genBetaShares() {
-        // this.beta = Utils.randomBig(q);
+        this.beta = Utils.randomBig(q);
         this.beta = BigInteger.ONE;
         LOG.debug("Beta: " + this.beta);
         SecureRandom random = new SecureRandom();
@@ -80,7 +84,8 @@ public class User {
 
     public SecretShareBigInteger[] genN_SK_nShares() {
         SecureRandom random = new SecureRandom();
-        SecretShareBigInteger[] shares = Shamir.split(this.n_sK_n, Params.RECOVER_K, Params.PARTICIPANT_NUM - 1, q, random);
+        SecretShareBigInteger[] shares = Shamir.split(this.n_sK_n, Params.RECOVER_K, Params.PARTICIPANT_NUM - 1, q,
+                random);
         return shares;
     }
 
@@ -98,35 +103,47 @@ public class User {
         return this.beta;
     }
 
-    private BigInteger genMaskedInputII() {
-        BigInteger pi = BigInteger.ZERO;
+    private BigVec genMaskedInputII() throws NoSuchAlgorithmException, NoSuchProviderException {
+        BigVec pi = BigVec.Zero(this.gLen);
+
         int indexSelf = -1;
         for (int i = 0; i < broadcastPubKeysList.size(); ++i) {
-            if (this.broadcastPubKeysList.get(i).getIdm() == this.id) indexSelf = i;
+            if (this.broadcastPubKeysList.get(i).getIdm() == this.id)
+                indexSelf = i;
         }
 
-        if (-1 == indexSelf) throw new RuntimeException("can't find indexSelf");
+        if (-1 == indexSelf)
+            throw new RuntimeException("can't find indexSelf");
 
         for (int i = 0; i < indexSelf; i++) {
             BigInteger tem = genKA_AgreeMaskedInput(broadcastPubKeysList.get(i).getN_pK_n());
-            LOG.debug("add ---> share: " + this.id + " to " + broadcastPubKeysList.get(i).getIdm() + ": " + tem.toString());
-            pi = pi.add(tem);
+            LOG.debug("add ---> share: " + this.id + " to " + broadcastPubKeysList.get(i).getIdm() + ": "
+                    + tem.toString());
+            var v = new PRG(tem.toString()).genBigs(this.gLen);
+            pi = pi.add(new BigVec(v));
         }
+
         for (int i = indexSelf + 1; i < broadcastPubKeysList.size(); i++) {
             BigInteger tem = genKA_AgreeMaskedInput(broadcastPubKeysList.get(i).getN_pK_n());
-            LOG.debug("subtract --- >share: " + this.id + " to " + broadcastPubKeysList.get(i).getIdm() + ": " + tem.toString());
-            pi = pi.subtract(tem);
+            LOG.debug("subtract --- >share: " + this.id + " to " + broadcastPubKeysList.get(i).getIdm() + ": "
+                    + tem.toString());
+            var v = new PRG(tem.toString()).genBigs(this.gLen);
+            pi = pi.subtract(new BigVec(v));
         }
         return pi;
     }
-     
-    public BigInteger genEncGradient() {
+
+    public BigVec genEncGradient() throws NoSuchAlgorithmException, NoSuchProviderException {
         LOG.info(" User Upload: " + this.id);
-        BigInteger x_n = BigInteger.ONE;
-        return x_n.add(genMaskedInputI()).add(genMaskedInputII());
+        PRG prgI = new PRG(genMaskedInputI().toString());
+        var a = new BigVec(prgI.genBigs(this.gLen));
+        var b = genMaskedInputII();
+        BigVec x = this.xN.add(a).add(b);
+        LOG.debug(this.id + ": gradient:" + this.xN + ", add beta: " + a);
+        return x;
     }
 
-    public MessageSigma genMessageSigma() {
+    public MessageSigma genMessageSigma() throws NoSuchAlgorithmException, NoSuchProviderException {
         MessageSigma messageSigma = new MessageSigma(genEncGradient());
         messageSigma.setId(this.id);
         return messageSigma;

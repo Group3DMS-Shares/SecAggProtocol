@@ -1,5 +1,7 @@
 package edu.bjut.verifynet.app;
 
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.util.ArrayList;
 
 import edu.bjut.common.util.Params;
@@ -15,20 +17,22 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.StopWatch;
 
-public class App 
-{
+public class App {
     static final Logger LOG = LoggerFactory.getLogger(App.class);
-    public static void main( String[] args )
+
+    public static void main(String[] args) throws NoSuchAlgorithmException, NoSuchProviderException
     {
         // args setting
         ArgumentParser parser = ArgumentParsers.newFor("Params Setting").build().defaultHelp(true)
                 .description("experiment setting: user number, failure number, gradient number");
         parser.addArgument("-u", "--user").type(Integer.class).help("Specify user number");
         parser.addArgument("-f", "--failure").setDefault(0).type(Integer.class).help("Specify dropout user number");
+        parser.addArgument("-g", "--gradients").setDefault(1).type(Integer.class).help("Specify gradients number");
         Namespace ns = parser.parseArgsOrFail(args);
         Integer userNum = ns.getInt("user");
         Integer failNum = ns.getInt("failure");
-        if (userNum == null || failNum == null) {
+        Integer gNum = ns.getInt("gradients");
+        if (userNum == null) {
             parser.printHelp();
             System.exit(0);
         }
@@ -38,7 +42,7 @@ public class App
         Server server = new Server();
         server.setParamsECC(ta.getParamsECC());
         ArrayList<User> users = new ArrayList<>();
-        for (int i = 0; i < Params.PARTICIPANT_NUM ; ++i) users.add(new User());
+        for (int i = 0; i < Params.PARTICIPANT_NUM ; ++i) users.add(new User(gNum));
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
         // round 0
@@ -78,7 +82,7 @@ public class App
         // u2 dropout
         ArrayList<Long> dropOutUsers = new ArrayList<>();
         // int dropNum = Params.PARTICIPANT_FAILS;
-        int dropNum = 0;
+        int dropNum = failNum;
         while (dropNum-- > 0) {
             LOG.debug("User nSkn:" + users.get(0).getN_sK_n());
             dropOutUsers.add(users.remove(0).getId());

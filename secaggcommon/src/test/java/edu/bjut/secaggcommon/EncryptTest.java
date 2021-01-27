@@ -1,16 +1,16 @@
 package edu.bjut.secaggcommon;
 
-import edu.bjut.common.aes.AesCipher;
+import static org.junit.Assert.assertEquals;
+
+import javax.crypto.Cipher;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
+
 import org.bouncycastle.crypto.Digest;
 import org.bouncycastle.crypto.digests.SHA256Digest;
 import org.junit.Test;
 
-import javax.crypto.*;
-import javax.crypto.spec.SecretKeySpec;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-
-import static org.junit.Assert.assertEquals;
+import edu.bjut.common.aes.AesCipher;
 
 public class EncryptTest {
 
