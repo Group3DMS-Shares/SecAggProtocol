@@ -221,12 +221,6 @@ public class ParameterServer {
 
         int[] pos = getPoss();
 
-        for (int i = 0; i < keys.length; i++) {
-            for (int j = 0; j < keys[0].length; j++) {
-                System.out.println(keys[i][j]);
-            }
-        }
-
         for (int i = 0; i < this.failNum; i++) {
             for (int j = 0; j < Params.RECOVER_K; j++) {
                 BigInteger aBigInteger = keys[j][i].getNumber().multiply(BigInteger.valueOf(11));
@@ -294,8 +288,7 @@ public class ParameterServer {
             Element temEle = value.duplicate().mul(tmp);
             accum = accum.duplicate().add(temEle);
         }
-//      System.out.println();
-        System.out.println("sec: " + accum);
+        LOG.info("sec: " + accum);
         return accum;
     }
 
@@ -322,20 +315,15 @@ public class ParameterServer {
         for (int i = 0; i < index; i++) {
             if (null == keys[pos][i])
                 continue;
-//          System.out.println(" tem " + keys[pos][i]);
             BigInteger tem = (keys[pos][i]).toBigInteger();
-//          System.out.println(" tem " + tem);
             pi = pi.add(tem);
         }
         for (int i = index + 1; i < keys[pos].length; i++) {
             if (null == keys[pos][i])
                 continue;
-//          System.out.println(" tem " + keys[pos][i]);
             BigInteger tem = (keys[pos][i]).toBigInteger();
-//          System.out.println(" tem " + tem);
             pi = pi.subtract(tem);
         }
-        System.out.println("pi test : " + pi.toString());
         return pi;
     }
 
