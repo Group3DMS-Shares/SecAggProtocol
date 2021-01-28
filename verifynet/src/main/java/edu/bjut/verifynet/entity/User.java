@@ -298,29 +298,6 @@ public class User {
         return dropoutShares;
     }
 
-    public ArrayList<MessageBetaShare> sendBetaShare() {
-        ArrayList<MessageBetaShare> mBetaShares = new ArrayList<>();
-        for (MessagePNM mPnm: pmnList) {
-            if (null != mPnm && u3ids.contains(mPnm.getFromIdN())) {
-                MessageBetaShare mBetaShare = new MessageBetaShare(mPnm.getFromIdN(), mPnm.getBetaNM());
-                mBetaShares.add(mBetaShare);
-            }
-        }
-        return mBetaShares;
-    }
-
-
-    public ArrayList<MessageDroupoutShare> sendDropoutAndBetaShare(ArrayList<Long> droupOutUsers) {
-        ArrayList<MessageDroupoutShare> mDropoutShares = new ArrayList<>();
-        for (MessagePNM mPnm: pmnList) {
-            if (null != mPnm && droupOutUsers.contains(mPnm.getFromIdN())) {
-                MessageDroupoutShare mDropoutShare = new MessageDroupoutShare(mPnm.getFromIdN(), mPnm.getnSkNM());
-                mDropoutShares.add(mDropoutShare);
-            }
-        }
-        return mDropoutShares;
-    }
-
     public BigInteger getDelta() {
         return delta;
     }

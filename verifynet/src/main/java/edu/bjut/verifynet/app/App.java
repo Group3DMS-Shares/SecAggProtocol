@@ -100,8 +100,6 @@ public class App {
         LOG.info( "Round 3: Unmasking" );
         // user send dropout user shares
         for (User u : users) {
-            // var betaShares = u.sendBetaShare();
-            // var dropoutShares = u.sendDropoutAndBetaShare(dropOutUsers);
             var betaShares  = u.sendCBetaShare();
             var dropoutShares = u.sendCDropoutAndBetaShare(dropOutUsers);
             server.receiveMsgAggBeta(betaShares);
