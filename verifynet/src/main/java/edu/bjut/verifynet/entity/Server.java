@@ -24,29 +24,22 @@ import org.slf4j.LoggerFactory;
 
 public class Server {
     private final static Logger LOG = LoggerFactory.getLogger(Server.class);
-    private ArrayList<MessagePubKeys> msgPubKeysList;
 
-    private ArrayList<ArrayList<MessagePNM>> messagePNMsInServer;
-    private ArrayList<MessageSigma> messageSigmasInServer;
-    private ArrayList<Long> receiveSigmaIds;
+    private ArrayList<MessagePubKeys> msgPubKeysList = new ArrayList<>();
 
-    private Map<Long, ArrayList<SecretShareBigInteger>> recoverBeta;
-    private Map<Long, ArrayList<SecretShareBigInteger>> recoverNSk;
+    private ArrayList<ArrayList<MessagePNM>> messagePNMsInServer = new ArrayList<>();
+    private ArrayList<MessageSigma> messageSigmasInServer = new ArrayList<>();
+    private ArrayList<Long> receiveSigmaIds = new ArrayList<>();
+
+    private Map<Long, ArrayList<SecretShareBigInteger>> recoverBeta = new HashMap<>();
+    private Map<Long, ArrayList<SecretShareBigInteger>> recoverNSk = new HashMap<>();
 
     private Pairing pairing;
     private BigInteger q;
-    private int u1Count;
+    private int u1Count = 0;
     private ArrayList<ArrayList<MessageCipherPNM>> messageCipherPNMs = new ArrayList<>();
 
-    public Server() {
-        this.msgPubKeysList = new ArrayList<>();
-        this.messagePNMsInServer = new ArrayList<>();
-        this.messageSigmasInServer = new ArrayList<>();
-        this.receiveSigmaIds = new ArrayList<>();
-        this.recoverBeta = new HashMap<>();
-        this.recoverNSk = new HashMap<>();
-        this.u1Count = 0;
-    }
+    public Server() { }
 
     public void broadcastTo(ArrayList<User> users) {
         for (User u : users) {

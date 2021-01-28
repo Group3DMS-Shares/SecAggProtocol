@@ -1,21 +1,21 @@
 package edu.bjut.psecagg.messages;
 
-import java.math.BigInteger;
+import edu.bjut.common.big.BigVec;
 
 public class MsgRound2 {
     private long id;
-    private BigInteger y;
+    private BigVec y;
 
-    public MsgRound2(long id, BigInteger y) {
+    public MsgRound2(long id, BigVec y) {
         this.id = id;
         this.y = y;
     }
 
-    public BigInteger getY() {
+    public BigVec getY() {
         return y;
     }
 
-    public void setY(BigInteger y) {
+    public void setY(BigVec y) {
         this.y = y;
     }
 

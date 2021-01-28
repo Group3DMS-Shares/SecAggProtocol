@@ -1,9 +1,11 @@
 package edu.bjut.psecagg.entity;
 
 import edu.bjut.common.aes.AesCipher;
+import edu.bjut.common.big.BigVec;
 import edu.bjut.common.messages.ParamsECC;
 import edu.bjut.common.shamir.SecretShareBigInteger;
 import edu.bjut.common.shamir.Shamir;
+import edu.bjut.common.util.PRG;
 import edu.bjut.common.util.Params;
 import edu.bjut.common.util.Utils;
 import edu.bjut.psecagg.messages.*;
@@ -15,6 +17,8 @@ import org.slf4j.LoggerFactory;
 import javax.crypto.Cipher;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.security.SecureRandom;
 import java.util.*;
 
@@ -32,10 +36,11 @@ public class Participant {
     private final Element duPk;
 
     // gradient
-    private final BigInteger x_u;
+    private BigVec x_u = BigVec.One(1);
+    private int gSize = 1;
 
-    private final long id;
-    private Map<Long, Element> signPubKeys;
+    private final long id = Utils.incrementId();;
+    private Map<Long, Element> signPubKeys = new HashMap<>();
 
     // round 0 keys
     private BigInteger cSk_u;
@@ -45,35 +50,38 @@ public class Participant {
     private Element sPk_u;
 
     // round 2
-    private final Set<Long> u2ids = new HashSet<>();
+    private Set<Long> u2ids = new HashSet<>();
     private BigInteger b_u;
     // every s^PK_u exclude self
-    private final Map<Long, Element> sPubKeys;
+    private Map<Long, Element> sPubKeys = new HashMap<>();
     // every c^PK_u exclude self
-    private final Map<Long, Element> cPubKeys = new HashMap<>();
-    private final List<UVShare> uvShareList = new ArrayList<>();
-    private final Map<Long, UVShare> uvShareMap = new HashMap<>();
+    private Map<Long, Element> cPubKeys = new HashMap<>();
+    private List<UVShare> uvShareList = new ArrayList<>();
+    private Map<Long, UVShare> uvShareMap = new HashMap<>();
     // round 3
-    private final Set<Long> u3ids = new HashSet<>();
-    private final Map<Long, CipherShare> cipherShareMap = new HashMap<>();
-
-    public Element getDuPk() {
-        return duPk;
-    }
+    private Set<Long> u3ids = new HashSet<>();
+    private Map<Long, CipherShare> cipherShareMap = new HashMap<>();
 
     public Participant(ParamsECC ps) {
-
-        this.id = Utils.incrementId();
         this.pairing = ps.getPairing();
         this.g = ps.getGeneratorOfG1().getImmutable();
         this.order = pairing.getG1().getOrder();
-        this.x_u = BigInteger.ONE;
-
         this.duSk = Utils.randomBig(order);
-        this.duPk = this.g.duplicate().pow(this.duSk);
+        this.duPk = this.g.pow(this.duSk);
+    }
 
-        this.signPubKeys = new HashMap<>();
-        this.sPubKeys = new HashMap<>();
+    public Participant(ParamsECC ps, int gSize) {
+        this.pairing = ps.getPairing();
+        this.g = ps.getGeneratorOfG1().getImmutable();
+        this.order = pairing.getG1().getOrder();
+        this.duSk = Utils.randomBig(order);
+        this.duPk = this.g.pow(this.duSk);
+        this.gSize = gSize;
+        this.x_u = BigVec.One(gSize);
+    }
+
+    public Element getDuPk() {
+        return duPk;
     }
 
 
@@ -88,7 +96,6 @@ public class Participant {
     public void setSignPubKeys(Map<Long, Element> signPubKeys) {
         this.signPubKeys = signPubKeys;
     }
-
 
     private boolean verifySign(long id, Element lcPk_u, Element lsPk_u, Element sigma_u) {
         LOG.debug("verify id: " + id);
@@ -115,8 +122,7 @@ public class Participant {
         this.sPk_u = g.duplicate().pow(this.sSk_u).getImmutable();
         LOG.debug(this.id + ", private: " + this.sSk_u + ", public: " + this.sPk_u);
         // sigma_u
-        String msg = cPk_u.toString() +
-                sPk_u.toString();
+        String msg = cPk_u.toString() + sPk_u.toString();
         LOG.info("sign msg: " + msg);
         Element hash = Utils.hash2ElementG1(msg, this.pairing).getImmutable();
         Element sigma_u = hash.pow(this.duSk);
@@ -129,13 +135,13 @@ public class Participant {
         return encK.toString();
     }
 
-
     public MsgRound1 sendMsgRound1(MsgResponseRound0 msgResponse) {
         var msg = msgResponse.getPubKeys();
         for (var m : msg) {
-            if (this.id == m.getId()) continue;
+            if (this.id == m.getId())
+                continue;
             if (!verifySign(m.getId(), m.getcPk_u(), m.getsPk_u(), m.getSigma_u()))
-                throw  new RuntimeException("Verify signature fail.");
+                throw new RuntimeException("Verify signature fail.");
             this.sPubKeys.put(m.getId(), m.getsPk_u());
             this.cPubKeys.put(m.getId(), m.getcPk_u());
         }
@@ -145,15 +151,14 @@ public class Participant {
 
         // generate shares for s^SK_u
         SecureRandom random = new SecureRandom();
-        SecretShareBigInteger[] b_uShares = Shamir.split(this.b_u, Params.RECOVER_K,
-                Params.PARTICIPANT_NUM - 1, order, random);
-        SecretShareBigInteger[] sSk_uShares = Shamir.split(this.sSk_u, Params.RECOVER_K,
-                Params.PARTICIPANT_NUM-1, order, random);
+        SecretShareBigInteger[] b_uShares = Shamir.split(this.b_u, Params.RECOVER_K, Params.PARTICIPANT_NUM - 1, order,
+                random);
+        SecretShareBigInteger[] sSk_uShares = Shamir.split(this.sSk_u, Params.RECOVER_K, Params.PARTICIPANT_NUM - 1,
+                order, random);
 
-        ArrayList<UVShare> uvShareList = new ArrayList<>();
         ArrayList<CipherShare> cipherShares = new ArrayList<>();
         Iterator<Long> it = this.sPubKeys.keySet().iterator();
-        for (int i = 0; i < b_uShares.length; ++i){
+        for (int i = 0; i < b_uShares.length; ++i) {
             var vId = it.next();
             try {
                 // generate symmetric key and aes encrypt
@@ -165,24 +170,21 @@ public class Participant {
                 byte[] sKNumber = sSk_uShares[i].getNumber().toByteArray();
                 byte[] sKShare = sSk_uShares[i].getShare().toByteArray();
                 // encrypt u, v, s^SK_u, b_u,v
-                var cipherShare = new CipherShare(this.id, vId, aesCipher.encrypt(idBuffer.array()), aesCipher.encrypt(vIdBuffer.array()),
-                        aesCipher.encrypt(buNumber), aesCipher.encrypt(buShare), aesCipher.encrypt(sKNumber),
-                        aesCipher.encrypt(sKShare));
-                UVShare uvShare = new UVShare(this.id, vId, b_uShares[i], sSk_uShares[i]);
-                uvShareList.add(uvShare);
+                var cipherShare = new CipherShare(this.id, vId, aesCipher.encrypt(idBuffer.array()),
+                        aesCipher.encrypt(vIdBuffer.array()), aesCipher.encrypt(buNumber), aesCipher.encrypt(buShare),
+                        aesCipher.encrypt(sKNumber), aesCipher.encrypt(sKShare));
                 cipherShares.add(cipherShare);
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
-        return new MsgRound1(this.id, uvShareList, cipherShares);
+        return new MsgRound1(this.id, cipherShares);
     }
 
-
-    public MsgRound2 sendMsgRound2(MsgResponseRound1 msgResponse1) {
+    public MsgRound2 sendMsgRound2(MsgResponseRound1 msgResponse1)
+            throws NoSuchAlgorithmException, NoSuchProviderException {
         ArrayList<MsgRound1> msgResponses = msgResponse1.getMsgRound1s();
         for (var m : msgResponses) {
-            var uvShares = m.getUvSharesList();
             var uvCipherShares = m.getCiperShares();
             for (var s : uvCipherShares) {
                 if (s.getvId() == this.id) {
@@ -190,32 +192,30 @@ public class Participant {
                     this.u2ids.add(s.getuId());
                 }
             }
-            for (var s : uvShares) {
-                if (s.getvId() == this.id) {
-                    this.uvShareList.add(s);
-                    this.u2ids.add(s.getuId());
-                    this.uvShareMap.put(s.getuId(), s);
-                }
-            }
         }
-        BigInteger y_u = this.x_u.add(this.b_u).add(genMaskedInputCollection());
+        PRG prg = new PRG(this.b_u.toString());
+        var bUPrg = prg.genBigs(this.gSize);
+        BigVec y_u = this.x_u.add(new BigVec(bUPrg)).add(genMaskedInputCollection());
         return new MsgRound2(this.id, y_u);
     }
 
-    private BigInteger genMaskedInputCollection() {
+    private BigVec genMaskedInputCollection() throws NoSuchAlgorithmException, NoSuchProviderException {
         LOG.debug("MaskedInputCollection.");
-        BigInteger p = BigInteger.ZERO;
+        BigVec p = BigVec.Zero(this.gSize);
         for (var e : sPubKeys.entrySet()) {
             Element sUV = e.getValue().getImmutable().duplicate().mul(this.sSk_u);
             LOG.debug("private: " + this.sSk_u + ", public: " + e.getValue());
             BigInteger sUVBig = Utils.hash2Big(sUV.toString(), this.order);
             LOG.info(this.id + " share with " + e.getKey() + ": " + sUVBig);
+            PRG prg = new PRG(sUVBig.toString());
+            var bUPrg = prg.genBigs(this.gSize);
+
             if (this.id > e.getKey()) {
                 LOG.info("add");
-                p = p.add(sUVBig);
+                p = p.add(new BigVec(bUPrg));
             } else {
                 LOG.info("subtract");
-                p = p.subtract(sUVBig);
+                p = p.subtract(new BigVec(bUPrg));
             }
         }
         return p;
@@ -272,9 +272,6 @@ public class Participant {
         return new MsgRound4(betaShares, uShares);
     }
 
-    private  void encryptShare(UVShare uvShare) {
-
-    }
     private UVShare decryptShare(CipherShare cipherShare, String symmetricKey, boolean needSu) throws
             Exception {
         AesCipher aesCipher = new AesCipher(symmetricKey, Cipher.DECRYPT_MODE);

@@ -1,13 +1,15 @@
 package edu.bjut.psecagg.app;
 
 import java.io.IOException;
-import java.math.BigInteger;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.util.ArrayList;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.StopWatch;
 
+import edu.bjut.common.big.BigVec;
 import edu.bjut.common.messages.ParamsECC;
 import edu.bjut.common.util.Params;
 import edu.bjut.psecagg.entity.ParameterServer;
@@ -20,16 +22,18 @@ public class AggApp {
 
     static final Logger LOG = LoggerFactory.getLogger(AggApp.class);
 
-    public static void main(String args[]) throws IOException {
+    public static void main(String args[]) throws IOException, NoSuchAlgorithmException, NoSuchProviderException {
         // args setting
         ArgumentParser parser = ArgumentParsers.newFor("Params Setting").build().defaultHelp(true)
                 .description("experiment setting: user number, failure number, gradient number");
         parser.addArgument("-u", "--user").type(Integer.class).help("Specify user number");
         parser.addArgument("-f", "--failure").setDefault(0).type(Integer.class).help("Specify dropout user number");
+        parser.addArgument("-g", "--gradients").setDefault(1).type(Integer.class).help("Specify gradients number");
         Namespace ns = parser.parseArgsOrFail(args);
         Integer userNum = ns.getInt("user");
         Integer failNum = ns.getInt("failure");
-        if (userNum == null || failNum == null) {
+        Integer gNum = ns.getInt("gradients");
+        if (userNum == null) {
             parser.printHelp();
             System.exit(0);
         }
@@ -41,7 +45,7 @@ public class AggApp {
         ParamsECC paramsECC = parameterServer.getParamsECC();
         for (int i = 0; i < Params.PARTICIPANT_NUM; i++) {
             // generate secret key and public key for each user
-            participants.add(new Participant(paramsECC));
+            participants.add(new Participant(paramsECC, gNum));
         }
         Aggregation aggregation = new Aggregation(parameterServer, participants);
 
@@ -58,7 +62,7 @@ public class AggApp {
         if (null == msgResponse1) throw new RuntimeException("smaller than share threshold");
 
         // Round 2
-        var msgResponse2 = aggregation.maskedInputCollection(msgResponse1);
+        var msgResponse2 = aggregation.maskedInputCollection(msgResponse1, failNum);
         if (null == msgResponse2) throw new RuntimeException("smaller than share threshold");
 
         // Round 3
@@ -66,7 +70,7 @@ public class AggApp {
         if (null == msgResponse3) throw new RuntimeException("smaller than share threshold");
 
         // Round 4
-        BigInteger z = aggregation.unmasking(msgResponse3);
+        BigVec z = aggregation.unmasking(msgResponse3);
         LOG.info("Aggregation results: " + z.toString());
         stopWatch.stop();
         LOG.warn("" + stopWatch.getLastTaskTimeMillis());

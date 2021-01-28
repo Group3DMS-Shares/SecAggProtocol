@@ -2,13 +2,17 @@ package edu.bjut.psecagg.entity;
 
 import java.io.IOException;
 import java.math.BigInteger;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
 import edu.bjut.common.shamir.SecretShareBigInteger;
 import edu.bjut.common.shamir.Shamir;
+import edu.bjut.common.big.BigVec;
 import edu.bjut.common.messages.ParamsECC;
+import edu.bjut.common.util.PRG;
 import edu.bjut.common.util.Params;
 import edu.bjut.common.util.Utils;
 import edu.bjut.psecagg.messages.*;
@@ -41,7 +45,7 @@ public class ParameterServer {
     // Round 2
     private int u3Count = 0;
     private ArrayList<Long> u3Ids = new ArrayList<>();
-    private ArrayList<BigInteger> y_uList = new ArrayList<>();
+    private ArrayList<BigVec> y_uList = new ArrayList<>();
 
     // Round 3
     private int u4Count = 0;
@@ -62,20 +66,18 @@ public class ParameterServer {
         return ps;
     }
 
-
     public void recvMsgRound0(MsgRound0 msgRound0) {
         msgRound0s.add(msgRound0);
         this.sPk_uMap.put(msgRound0.getId(), msgRound0.getsPk_u());
         this.cPk_uMap.put(msgRound0.getId(), msgRound0.getcPk_u());
     }
 
-	public MsgResponseRound0 sendMsgResponseRound0() {
+    public MsgResponseRound0 sendMsgResponseRound0() {
         this.u1Count = msgRound0s.size();
         // TODO t-out-of-n check
-        assert(this.u1Count >= Params.RECOVER_K);
+        assert (this.u1Count >= Params.RECOVER_K);
         return new MsgResponseRound0(msgRound0s);
-	}
-
+    }
 
     public void recvMsgRound1(MsgRound1 msgRound1) {
         this.allMsgRound1s.add(msgRound1);
@@ -85,7 +87,7 @@ public class ParameterServer {
     public MsgResponseRound1 sendMsgResponseRound1() {
         this.u2Count = this.allMsgRound1s.size();
         // TODO t-out-of-n check
-        assert(this.u1Count >= Params.RECOVER_K);
+        assert (this.u1Count >= Params.RECOVER_K);
         return new MsgResponseRound1(this.allMsgRound1s);
     }
 
@@ -113,22 +115,24 @@ public class ParameterServer {
     public void recvMsgRound4(MsgRound4 msgRound4) {
         var betaShares = msgRound4.getBetaShares();
         var svnShares = msgRound4.getSvuShares();
-        betaShares.forEach(x-> {
+        betaShares.forEach(x -> {
             this.buMap.computeIfAbsent(x.getId(), k -> new ArrayList<>());
             this.buMap.get(x.getId()).add(x.getBetaShare());
         });
-        svnShares.forEach(x-> {
+        svnShares.forEach(x -> {
             this.svnMap.computeIfAbsent(x.getId(), k -> new ArrayList<>());
             this.svnMap.get(x.getId()).add(x.getUShare());
         });
     }
 
-    public BigInteger outputZ() {
-        BigInteger sigmaX_u = BigInteger.ZERO;
+    public BigVec outputZ() throws NoSuchAlgorithmException, NoSuchProviderException {
+        int gSize = this.y_uList.get(0).size();
+        BigVec sigmaX_u = BigVec.Zero(gSize);
         for (var x : y_uList) {
             sigmaX_u = sigmaX_u.add(x);
         }
-        BigInteger pu = BigInteger.ZERO;
+        BigVec pu = BigVec.Zero(gSize);
+
         ArrayList<Long> except = new ArrayList<>();
         for (var i : u2ids) {
             if (u3Ids.contains(i)) {
@@ -141,11 +145,13 @@ public class ParameterServer {
             var v = e.getValue();
             LOG.info(String.valueOf(k));
             SecretShareBigInteger[] shares = new SecretShareBigInteger[v.size()];
-            pu = pu.add(Shamir.combine(v.toArray(shares), order));
+            var puBig = Shamir.combine(v.toArray(shares), order);
+            PRG prg = new PRG(puBig.toString());
+            var puBigArray = prg.genBigs(gSize);
+            pu = pu.add(new BigVec(puBigArray));
         }
 
-        // Map<Long, BigInteger> sSk_uMap = new HashMap<>();
-        BigInteger puv = BigInteger.ZERO;
+        BigVec puv = BigVec.Zero(gSize);
         for (var e : svnMap.entrySet()) {
             long u = e.getKey();
             SecretShareBigInteger[] shares = new SecretShareBigInteger[e.getValue().size()];
@@ -154,12 +160,14 @@ public class ParameterServer {
                 Element suv = this.sPk_uMap.get(v).getImmutable().mul(key);
                 BigInteger suvBig = Utils.hash2Big(suv.toString(), order);
                 LOG.debug(u + " to " + v + ": ");
+                PRG prg = new PRG(suvBig.toString());
+                var suvBigArray = prg.genBigs(gSize);
                 if (u > v) {
                     LOG.debug("subtract: " + suvBig);
-                    puv = puv.subtract(suvBig);
+                    puv = puv.subtract(new BigVec(suvBigArray));
                 } else {
                     LOG.debug("add: " + suvBig);
-                    puv = puv.add(suvBig);
+                    puv = puv.add(new BigVec(suvBigArray));
                 }
             }
         }
