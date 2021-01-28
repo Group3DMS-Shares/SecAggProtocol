@@ -1,9 +1,6 @@
 package edu.bjut.psecagg.entity;
 
-import java.io.IOException;
 import java.math.BigInteger;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -55,7 +52,7 @@ public class ParameterServer {
     Map<Long, ArrayList<SecretShareBigInteger>> buMap = new HashMap<>();
     Map<Long, ArrayList<SecretShareBigInteger>> svnMap = new HashMap<>();
 
-    public ParameterServer() throws IOException {
+    public ParameterServer() {
         this.pairing = PairingFactory.getPairing("aggVote1.properties");
         this.order = pairing.getG1().getOrder();
         this.g = this.pairing.getG1().newRandomElement().getImmutable();
@@ -125,7 +122,7 @@ public class ParameterServer {
         });
     }
 
-    public BigVec outputZ() throws NoSuchAlgorithmException, NoSuchProviderException {
+    public BigVec outputZ() {
         int gSize = this.y_uList.get(0).size();
         BigVec sigmaX_u = BigVec.Zero(gSize);
         for (var x : y_uList) {

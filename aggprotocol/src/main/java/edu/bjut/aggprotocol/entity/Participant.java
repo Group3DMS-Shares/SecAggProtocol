@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import edu.bjut.common.shamir.SecretShare;
 import edu.bjut.common.shamir.SecretShareBigInteger;
 import edu.bjut.common.shamir.Shamir;
+import edu.bjut.common.big.BigVec;
 import edu.bjut.common.messages.ParamsECC;
 import edu.bjut.common.util.Params;
 import edu.bjut.common.util.Utils;
@@ -28,7 +29,7 @@ import it.unisa.dia.gas.jpbc.Pairing;
 public class Participant {
 
     private final static Logger LOG = LoggerFactory.getLogger(Participant.class);
-    private long id;
+    private final long id = Utils.randomlong();;
     private Pairing pairing;
 
     private BigInteger di;
@@ -45,20 +46,33 @@ public class Participant {
     ArrayList<Element> allQi = new ArrayList<Element>();
     ArrayList<SecretShareBigInteger> alKi = new ArrayList<SecretShareBigInteger>();
 
+    private int gSize = 1;
+
     public Participant(ParamsECC ps) throws IOException {
-
-        this.id = Utils.randomlong();
         this.pairing = ps.getPairing();
-        this.g = ps.getGeneratorOfG1();
-
+        this.g = ps.getGeneratorOfG1().getImmutable();
         this.order = pairing.getG1().getOrder();
-        this.di = Utils.randomBig(order);
 
+        this.di = Utils.randomBig(order);
         this.ki = Utils.randomBig(order);
 
-        this.ri = this.g.duplicate().pow(this.di);
-        this.qi = this.g.duplicate().pow(this.ki);
+        this.ri = this.g.pow(this.di);
+        this.qi = this.g.pow(this.ki);
     }
+
+    public Participant(ParamsECC ps, int gSize) throws IOException {
+        this.pairing = ps.getPairing();
+        this.g = ps.getGeneratorOfG1().getImmutable();
+        this.order = pairing.getG1().getOrder();
+
+        this.di = Utils.randomBig(order);
+        this.ki = Utils.randomBig(order);
+
+        this.ri = this.g.pow(this.di);
+        this.qi = this.g.pow(this.ki);
+        this.gSize = gSize;
+    }
+
 
     public RegMessage genRegMesssage() {
         RegMessage reg = new RegMessage(this.id, this.ri, this.qi);
@@ -105,7 +119,7 @@ public class Participant {
         if (count++ > 2401)
             count = 1;
 
-        BigInteger ci = getEncryptedWeights();
+        BigVec ci = getEncryptedWeights();
 
         Element temEle = Utils.hash2ElementG1(ci.toString() + id + count, this.pairing);
         Element si = temEle.duplicate().mul(this.di);
@@ -116,12 +130,15 @@ public class Participant {
         return new RepMessage(id, ci, si, count);
     }
 
-    private BigInteger getEncryptedWeights() {
-        BigInteger ci = BigInteger.valueOf(1);
-        BigInteger pi = genPi();
+    private BigVec getEncryptedWeights() {
+        BigVec ci = BigVec.One(this.gSize);
+        BigVec pi = genPi();
+        LOG.debug("add pi");
         ci = ci.add(pi);
         BigInteger ni = Utils.hash2Big(Long.toString(this.k + this.count), this.order);
-        ci = ci.add(ni);
+        LOG.debug("add ni: " + ni);
+        BigVec niVec = BigVec.genPRGBigVec(ni.toString(), this.gSize);
+        ci = ci.add(niVec);
         return ci;
     }
 
@@ -148,18 +165,20 @@ public class Participant {
         return ci;
     }
 
-    private BigInteger genPi() {
-        BigInteger pi = BigInteger.ZERO;
+    private BigVec genPi() {
+        BigVec pi = BigVec.Zero(this.gSize);
         int index = allQi.indexOf(this.qi);
         Element hr = Utils.hash2ElementG1(Integer.toString(count), pairing);
 
         for (int i = 0; i < index; i++) {
             Element tem = this.pairing.pairing(allQi.get(i), hr).duplicate().mul(this.ki);
-            pi = pi.add(tem.toBigInteger());
+            LOG.debug(i + " add: " +tem.toBigInteger());
+            pi = pi.add(BigVec.genPRGBigVec(tem.toBigInteger().toString(), this.gSize));
         }
         for (int i = index + 1; i < allQi.size(); i++) {
             Element tem = this.pairing.pairing(allQi.get(i), hr).duplicate().mul(this.ki);
-            pi = pi.subtract(tem.toBigInteger());
+            LOG.debug(i + " subtract: " +tem.toBigInteger());
+            pi = pi.subtract(BigVec.genPRGBigVec(tem.toBigInteger().toString(), this.gSize));
         }
         return pi;
     }
@@ -167,13 +186,15 @@ public class Participant {
     public void getRepMessage(RepMessage rep) throws IOException {
         BigInteger ni = Utils.hash2Big(Long.toString(this.k + this.count), this.order);
         ni = ni.multiply(BigInteger.valueOf(this.allQi.size()));
-        LOG.info("data: " + rep.getCi().subtract(ni));
+        BigVec niVec = BigVec.genPRGBigVec(ni.toString(), this.gSize);
+        LOG.info("data: " + rep.getCi().subtract(niVec));
     }
 
     public void getRepMessageFails(RepMessage rep, int failNum) throws IOException {
         BigInteger ni = Utils.hash2Big(Long.toString(this.k + this.count), this.order);
-        ni = ni.multiply(BigInteger.valueOf(this.allQi.size() - failNum));
-        LOG.info("data: " + (rep.getCi().subtract(ni)).mod(this.order));
+        BigVec niVec = BigVec.genPRGBigVec(ni.toString(), this.gSize);
+        niVec = niVec.multiply(BigInteger.valueOf(this.allQi.size() - failNum));
+        LOG.info("data: " + rep.getCi().subtract(niVec));
     }
 
 }

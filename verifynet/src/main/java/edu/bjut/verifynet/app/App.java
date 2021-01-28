@@ -1,7 +1,5 @@
 package edu.bjut.verifynet.app;
 
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
 import java.util.ArrayList;
 
 import edu.bjut.common.util.Params;
@@ -20,8 +18,7 @@ import org.springframework.util.StopWatch;
 public class App {
     static final Logger LOG = LoggerFactory.getLogger(App.class);
 
-    public static void main(String[] args) throws NoSuchAlgorithmException, NoSuchProviderException
-    {
+    public static void main(String[] args) {
         // args setting
         ArgumentParser parser = ArgumentParsers.newFor("Params Setting").build().defaultHelp(true)
                 .description("experiment setting: user number, failure number, gradient number");

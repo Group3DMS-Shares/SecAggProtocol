@@ -2,8 +2,6 @@ package edu.bjut.common.util;
 
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
 import java.security.SecureRandom;
 
 public class PRG {
@@ -22,13 +20,18 @@ public class PRG {
         this.nBits = nBits;
     }
 
-    private SecureRandom getSecureRandom() throws NoSuchAlgorithmException, NoSuchProviderException {
-        SecureRandom sr = SecureRandom.getInstance(ALGORITHM, PROVIDER);
+    private SecureRandom getSecureRandom() {
+        SecureRandom sr = null;
+        try {
+            sr = SecureRandom.getInstance(ALGORITHM, PROVIDER);
+        } catch (Exception e) {
+            throw new RuntimeException(e.getMessage());
+        }
         sr.setSeed(this.seed.getBytes(StandardCharsets.UTF_8));
         return sr;
     }
 
-    public BigInteger[] genBigs(int len) throws NoSuchAlgorithmException, NoSuchProviderException {
+    public BigInteger[] genBigs(int len) {
         SecureRandom rand = getSecureRandom();
         BigInteger[] v = new BigInteger[len];
         for (int i = 0; i < len; ++i) {
@@ -36,6 +39,5 @@ public class PRG {
         }
         return v;
     }
-    
-    
+
 }

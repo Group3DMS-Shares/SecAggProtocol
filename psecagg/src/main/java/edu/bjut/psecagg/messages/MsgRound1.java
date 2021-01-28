@@ -1,7 +1,6 @@
 package edu.bjut.psecagg.messages;
 
 import edu.bjut.psecagg.entity.CipherShare;
-import edu.bjut.psecagg.entity.UVShare;
 
 import java.util.ArrayList;
 

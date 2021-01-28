@@ -1,7 +1,5 @@
 package edu.bjut.psecagg.app;
 
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
@@ -49,8 +47,7 @@ public class Aggregation {
         return this.parameterServer.sendMsgResponseRound1();
     }
 
-    public MsgResponseRound2 maskedInputCollection(MsgResponseRound1 msgResponse1, int failNum)
-            throws NoSuchAlgorithmException, NoSuchProviderException {
+    public MsgResponseRound2 maskedInputCollection(MsgResponseRound1 msgResponse1, int failNum) {
         for (int i = 0; i < this.participants.size() - failNum; ++i) {
             MsgRound2 msgRound2 = this.participants.get(i).sendMsgRound2(msgResponse1);
             this.parameterServer.recvMsgRound2(msgRound2);
@@ -66,7 +63,7 @@ public class Aggregation {
         return this.parameterServer.sendMsgResponseRound3();
     }
 
-    public BigVec unmasking(MsgResponseRound3 msgResponse3) throws NoSuchAlgorithmException, NoSuchProviderException {
+    public BigVec unmasking(MsgResponseRound3 msgResponse3) {
         for (var p : this.participants) {
             MsgRound4 msgRound4 = p.sendMsgRound4(msgResponse3);
             this.parameterServer.recvMsgRound4(msgRound4);

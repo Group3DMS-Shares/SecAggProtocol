@@ -88,6 +88,10 @@ public class ImproveAggregation {
             }
         }
 
+        if (rep == null) {
+            LOG.error("the num of user is smaller than recover threshold");
+            return;
+        }
         // sends the recovered data back to participants
         for (int i = 0; i < this.participants.size(); ++i) {
             if (!fails[i]) {

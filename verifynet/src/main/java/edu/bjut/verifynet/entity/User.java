@@ -2,26 +2,31 @@ package edu.bjut.verifynet.entity;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 
-import edu.bjut.common.aes.AesCipher;
-import edu.bjut.common.big.BigVec;
-import edu.bjut.common.shamir.SecretShareBigInteger;
-import edu.bjut.common.shamir.Shamir;
-import edu.bjut.common.messages.ParamsECC;
-import edu.bjut.verifynet.message.*;
-import edu.bjut.common.util.PRG;
-import edu.bjut.common.util.Params;
-import edu.bjut.common.util.Utils;
-import it.unisa.dia.gas.jpbc.Element;
-import it.unisa.dia.gas.jpbc.Pairing;
+import javax.crypto.Cipher;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.crypto.Cipher;
+import edu.bjut.common.aes.AesCipher;
+import edu.bjut.common.big.BigVec;
+import edu.bjut.common.messages.ParamsECC;
+import edu.bjut.common.shamir.SecretShareBigInteger;
+import edu.bjut.common.shamir.Shamir;
+import edu.bjut.common.util.PRG;
+import edu.bjut.common.util.Params;
+import edu.bjut.common.util.Utils;
+import edu.bjut.verifynet.message.MessageBetaShare;
+import edu.bjut.verifynet.message.MessageCipherPNM;
+import edu.bjut.verifynet.message.MessageDroupoutShare;
+import edu.bjut.verifynet.message.MessageKeys;
+import edu.bjut.verifynet.message.MessagePNM;
+import edu.bjut.verifynet.message.MessagePubKeys;
+import edu.bjut.verifynet.message.MessageSigma;
+import it.unisa.dia.gas.jpbc.Element;
+import it.unisa.dia.gas.jpbc.Pairing;
 
 public class User {
 
@@ -103,7 +108,7 @@ public class User {
         return this.beta;
     }
 
-    private BigVec genMaskedInputII() throws NoSuchAlgorithmException, NoSuchProviderException {
+    private BigVec genMaskedInputII() {
         BigVec pi = BigVec.Zero(this.gLen);
 
         int indexSelf = -1;
@@ -119,21 +124,21 @@ public class User {
             BigInteger tem = genKA_AgreeMaskedInput(broadcastPubKeysList.get(i).getN_pK_n());
             LOG.debug("add ---> share: " + this.id + " to " + broadcastPubKeysList.get(i).getIdm() + ": "
                     + tem.toString());
-            var v = new PRG(tem.toString()).genBigs(this.gLen);
-            pi = pi.add(new BigVec(v));
+            var v = BigVec.genPRGBigVec(tem.toString(), this.gLen);
+            pi = pi.add(v);
         }
 
         for (int i = indexSelf + 1; i < broadcastPubKeysList.size(); i++) {
             BigInteger tem = genKA_AgreeMaskedInput(broadcastPubKeysList.get(i).getN_pK_n());
             LOG.debug("subtract --- >share: " + this.id + " to " + broadcastPubKeysList.get(i).getIdm() + ": "
                     + tem.toString());
-            var v = new PRG(tem.toString()).genBigs(this.gLen);
-            pi = pi.subtract(new BigVec(v));
+            var v = BigVec.genPRGBigVec(tem.toString(), this.gLen);
+            pi = pi.subtract(v);
         }
         return pi;
     }
 
-    public BigVec genEncGradient() throws NoSuchAlgorithmException, NoSuchProviderException {
+    public BigVec genEncGradient() {
         LOG.info(" User Upload: " + this.id);
         PRG prgI = new PRG(genMaskedInputI().toString());
         var a = new BigVec(prgI.genBigs(this.gLen));
@@ -143,7 +148,7 @@ public class User {
         return x;
     }
 
-    public MessageSigma genMessageSigma() throws NoSuchAlgorithmException, NoSuchProviderException {
+    public MessageSigma genMessageSigma() {
         MessageSigma messageSigma = new MessageSigma(genEncGradient());
         messageSigma.setId(this.id);
         return messageSigma;

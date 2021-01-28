@@ -1,8 +1,5 @@
 package edu.bjut.psecagg.app;
 
-import java.io.IOException;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
 import java.util.ArrayList;
 
 import org.slf4j.Logger;
@@ -22,7 +19,7 @@ public class AggApp {
 
     static final Logger LOG = LoggerFactory.getLogger(AggApp.class);
 
-    public static void main(String args[]) throws IOException, NoSuchAlgorithmException, NoSuchProviderException {
+    public static void main(String args[])  { 
         // args setting
         ArgumentParser parser = ArgumentParsers.newFor("Params Setting").build().defaultHelp(true)
                 .description("experiment setting: user number, failure number, gradient number");

@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import edu.bjut.common.shamir.SecretShare;
 import edu.bjut.common.shamir.SecretShareBigInteger;
+import edu.bjut.common.big.BigVec;
 import edu.bjut.common.messages.ParamsECC;
 import edu.bjut.common.util.Params;
 import edu.bjut.common.util.Utils;
@@ -159,7 +160,7 @@ public class ParameterServer {
             return null;
 
         if (false == checkingIncomeMessage()) {
-            System.out.println("check failed at the agg side");
+            LOG.warn("check failed at the server");
             return null;
         }
         return genRepMessage(sumUpReportingData(), rep.getTi());
@@ -181,17 +182,17 @@ public class ParameterServer {
     /**
      * A meter report multiple types of data to aggregator at a time
      */
-    public RepMessage genRepMessage(BigInteger data, int count) throws IOException {
+    public RepMessage genRepMessage(BigVec data, int count) throws IOException {
         Element temEle = Utils.hash2ElementG1(data.toString() + id + count, this.pairing);
         Element si = temEle.duplicate().mul(this.dj);
         return new RepMessage(id, data, si, count);
     }
 
-    private BigInteger sumUpReportingData() throws IOException {
+    private BigVec sumUpReportingData() throws IOException {
+        int gSize = alRep.get(0).getCi().size();
 
+        BigVec ci = BigVec.Zero(gSize);
         Iterator<RepMessage> itRep = alRep.iterator();
-        BigInteger ci = BigInteger.ZERO;
-
         while (itRep.hasNext()) {
             ci = ci.add(itRep.next().getCi());
         }
@@ -200,12 +201,12 @@ public class ParameterServer {
         return ci;
     }
 
-    private BigInteger sumUpFailsData() throws IOException {
-
+    private BigVec sumUpFailsData() throws IOException {
+        int gSize = alRep.get(0).getCi().size();
+        BigVec ci = BigVec.Zero(gSize);
         Iterator<RepMessage> itRep = alRep.iterator();
-        BigInteger ci = BigInteger.ZERO;
         while (itRep.hasNext()) {
-            ci = ci.add(itRep.next().getCi()).mod(this.order);
+            ci = ci.add(itRep.next().getCi());
         }
 
         Iterator<RepKeys> itRepKeys = alRepKeys.iterator();
@@ -228,15 +229,13 @@ public class ParameterServer {
 
         for (int i = 0; i < this.failNum; i++) {
             for (int j = 0; j < Params.RECOVER_K; j++) {
-
                 BigInteger aBigInteger = keys[j][i].getNumber().multiply(BigInteger.valueOf(11));
                 Element aElement = keys[j][i].getShare();
-
                 sharesToViewSecret[j] = new SecretShare(aBigInteger, aElement);
             }
             Element tem = combine2(sharesToViewSecret);
             LOG.debug("failure node: " + pos[i]);
-            BigInteger pi = genPi(tem, pos[i]);
+            BigVec pi = genPi(tem, pos[i], gSize);
             ci = ci.add(pi);
         }
 
@@ -255,17 +254,17 @@ public class ParameterServer {
         return pos;
     }
 
-    private BigInteger genPi(Element tems, int index) {
-        BigInteger pi = BigInteger.ZERO;
+    private BigVec genPi(Element tems, int index, int gSize) {
+        BigVec pi = BigVec.Zero(gSize);
 
         for (int i = 0; i < index; i++) {
             Element tem = this.pairing.pairing(allQi.get(i), tems);
-            pi = pi.add(tem.toBigInteger());
+            pi = pi.add(BigVec.genPRGBigVec(tem.toBigInteger().toString(), gSize));
         }
 
         for (int i = index + 1; i < allQi.size(); i++) {
             Element tem = this.pairing.pairing(allQi.get(i), tems);
-            pi = pi.subtract(tem.toBigInteger());
+            pi = pi.subtract(BigVec.genPRGBigVec(tem.toBigInteger().toString(), gSize));
         }
         LOG.debug("pi test : " + pi.toString());
         return pi;
@@ -410,11 +409,9 @@ public class ParameterServer {
         Element right = PrepareRight(alFai);
 
         if (!left.equals(right)) {
-            LOG.debug("left ::: " + left);
-            LOG.debug("right::: " + right);
-            LOG.debug("failures verification does not equal to left failed!");
-        } else {
-            LOG.debug("preparing data, please wait!!!");
+            LOG.debug("left :" + left);
+            LOG.debug("right : " + right);
+            LOG.debug(" verification fails");
         }
         return true;
     }

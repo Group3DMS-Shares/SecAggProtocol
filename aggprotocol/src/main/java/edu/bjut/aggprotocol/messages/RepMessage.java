@@ -1,15 +1,14 @@
 package edu.bjut.aggprotocol.messages;
 
-import java.math.BigInteger;
-
+import edu.bjut.common.big.BigVec;
 import it.unisa.dia.gas.jpbc.Element;
 
 public class RepMessage {
     private long id;
-    private BigInteger ci;
+    private BigVec ci;
     private Element si;
     private int ti;
-    public RepMessage(long id, BigInteger ci, Element si, int ti) {
+    public RepMessage(long id, BigVec ci, Element si, int ti) {
         super();
         this.id = id;
         this.ci = ci;
@@ -22,10 +21,10 @@ public class RepMessage {
     public void setId(long id) {
         this.id = id;
     }
-    public BigInteger getCi() {
+    public BigVec getCi() {
         return ci;
     }
-    public void setCi(BigInteger ci) {
+    public void setCi(BigVec ci) {
         this.ci = ci;
     }
     public Element getSi() {

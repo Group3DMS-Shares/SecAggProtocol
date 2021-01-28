@@ -25,10 +25,12 @@ public class AggApp {
                 .description("experiment setting: user number, failure number, gradient number");
         parser.addArgument("-u", "--user").type(Integer.class).help("Specify user number");
         parser.addArgument("-f", "--failure").setDefault(0).type(Integer.class).help("Specify dropout user number");
+        parser.addArgument("-g", "--gradients").setDefault(1).type(Integer.class).help("Specify gradients number");
         Namespace ns = parser.parseArgsOrFail(args);
         Integer userNum = ns.getInt("user");
         Integer failNum = ns.getInt("failure");
-        if (userNum == null || failNum == null) {
+        Integer gNum = ns.getInt("gradients");
+        if (userNum == null) {
             parser.printHelp();
             System.exit(0);
         }
@@ -38,7 +40,7 @@ public class AggApp {
         List<Participant> participants = new ArrayList<>();
         var ps = parameterServer.getParamsECC();
         for (int i = 0; i < Params.PARTICIPANT_NUM; ++i) {
-            participants.add(new Participant(ps));
+            participants.add(new Participant(ps, gNum));
         }
         ImproveAggregation improveAggregation = new ImproveAggregation(parameterServer, participants);
         StopWatch stopWatch = new StopWatch();
@@ -46,7 +48,7 @@ public class AggApp {
         // registration phrase
         improveAggregation.registrationPhase();
         // data aggregation
-        improveAggregation.dataAggregation(0);
+        improveAggregation.dataAggregation(failNum);
         stopWatch.stop();
         LOG.warn("" + stopWatch.getLastTaskTimeMillis());
     }

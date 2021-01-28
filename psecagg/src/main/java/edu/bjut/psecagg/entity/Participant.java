@@ -1,26 +1,38 @@
 package edu.bjut.psecagg.entity;
 
+import java.math.BigInteger;
+import java.nio.ByteBuffer;
+import java.security.SecureRandom;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
+
+import javax.crypto.Cipher;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import edu.bjut.common.aes.AesCipher;
 import edu.bjut.common.big.BigVec;
 import edu.bjut.common.messages.ParamsECC;
 import edu.bjut.common.shamir.SecretShareBigInteger;
 import edu.bjut.common.shamir.Shamir;
-import edu.bjut.common.util.PRG;
 import edu.bjut.common.util.Params;
 import edu.bjut.common.util.Utils;
-import edu.bjut.psecagg.messages.*;
+import edu.bjut.psecagg.messages.MsgResponseRound0;
+import edu.bjut.psecagg.messages.MsgResponseRound1;
+import edu.bjut.psecagg.messages.MsgResponseRound2;
+import edu.bjut.psecagg.messages.MsgResponseRound3;
+import edu.bjut.psecagg.messages.MsgRound0;
+import edu.bjut.psecagg.messages.MsgRound1;
+import edu.bjut.psecagg.messages.MsgRound2;
+import edu.bjut.psecagg.messages.MsgRound3;
+import edu.bjut.psecagg.messages.MsgRound4;
 import it.unisa.dia.gas.jpbc.Element;
 import it.unisa.dia.gas.jpbc.Pairing;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.crypto.Cipher;
-import java.math.BigInteger;
-import java.nio.ByteBuffer;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
-import java.security.SecureRandom;
-import java.util.*;
 
 public class Participant {
 
@@ -56,8 +68,6 @@ public class Participant {
     private Map<Long, Element> sPubKeys = new HashMap<>();
     // every c^PK_u exclude self
     private Map<Long, Element> cPubKeys = new HashMap<>();
-    private List<UVShare> uvShareList = new ArrayList<>();
-    private Map<Long, UVShare> uvShareMap = new HashMap<>();
     // round 3
     private Set<Long> u3ids = new HashSet<>();
     private Map<Long, CipherShare> cipherShareMap = new HashMap<>();
@@ -181,8 +191,7 @@ public class Participant {
         return new MsgRound1(this.id, cipherShares);
     }
 
-    public MsgRound2 sendMsgRound2(MsgResponseRound1 msgResponse1)
-            throws NoSuchAlgorithmException, NoSuchProviderException {
+    public MsgRound2 sendMsgRound2(MsgResponseRound1 msgResponse1) {
         ArrayList<MsgRound1> msgResponses = msgResponse1.getMsgRound1s();
         for (var m : msgResponses) {
             var uvCipherShares = m.getCiperShares();
@@ -193,13 +202,12 @@ public class Participant {
                 }
             }
         }
-        PRG prg = new PRG(this.b_u.toString());
-        var bUPrg = prg.genBigs(this.gSize);
-        BigVec y_u = this.x_u.add(new BigVec(bUPrg)).add(genMaskedInputCollection());
+        var bUPrg = BigVec.genPRGBigVec(this.b_u.toString(), this.gSize);
+        BigVec y_u = this.x_u.add(bUPrg).add(genMaskedInputCollection());
         return new MsgRound2(this.id, y_u);
     }
 
-    private BigVec genMaskedInputCollection() throws NoSuchAlgorithmException, NoSuchProviderException {
+    private BigVec genMaskedInputCollection() {
         LOG.debug("MaskedInputCollection.");
         BigVec p = BigVec.Zero(this.gSize);
         for (var e : sPubKeys.entrySet()) {
@@ -207,15 +215,14 @@ public class Participant {
             LOG.debug("private: " + this.sSk_u + ", public: " + e.getValue());
             BigInteger sUVBig = Utils.hash2Big(sUV.toString(), this.order);
             LOG.info(this.id + " share with " + e.getKey() + ": " + sUVBig);
-            PRG prg = new PRG(sUVBig.toString());
-            var bUPrg = prg.genBigs(this.gSize);
-
+            // bUPRG vector
+            var bUPrg = BigVec.genPRGBigVec(sUVBig.toString(), this.gSize);
             if (this.id > e.getKey()) {
                 LOG.info("add");
-                p = p.add(new BigVec(bUPrg));
+                p = p.add(bUPrg);
             } else {
                 LOG.info("subtract");
-                p = p.subtract(new BigVec(bUPrg));
+                p = p.subtract(bUPrg);
             }
         }
         return p;

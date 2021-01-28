@@ -1,8 +1,6 @@
 package edu.bjut.verifynet.entity;
 
 import java.math.BigInteger;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -133,7 +131,7 @@ public class Server {
         }
     }
 
-    private BigVec recoverSnm(int gSize) throws NoSuchAlgorithmException, NoSuchProviderException {
+    private BigVec recoverSnm(int gSize) {
         LOG.info("dropout number: " + recoverNSk.size());
         // recover Nsk
         Map<Long, BigInteger> dropoutNsk = new HashMap<>();
@@ -184,7 +182,7 @@ public class Server {
         return beta;
     }
 
-    public BigVec calculateOmeagXn() throws NoSuchAlgorithmException, NoSuchProviderException {
+    public BigVec calculateOmeagXn() {
         int gLen = messageSigmasInServer.get(0).getX_n_hat().size();
         BigVec omegaXn = BigVec.Zero(gLen);
 
@@ -206,8 +204,7 @@ public class Server {
         return omegaXn;
     }
 
-    public void broadcastToAggResultAndProof(ArrayList<User> users)
-            throws NoSuchAlgorithmException, NoSuchProviderException {
+    public void broadcastToAggResultAndProof(ArrayList<User> users) {
             LOG.info("Aggregation Result: " + calculateOmeagXn());
     }
 

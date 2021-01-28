@@ -3,6 +3,8 @@ package edu.bjut.common.big;
 import java.math.BigInteger;
 import java.util.Arrays;
 
+import edu.bjut.common.util.PRG;
+
 public class BigVec {
 
     private BigInteger[] bigs;
@@ -59,4 +61,34 @@ public class BigVec {
         return Arrays.toString(this.bigs);
     }
 
+    @Override
+    public boolean equals(Object anObject) {
+        System.out.println("test");
+        if (this == anObject) {
+            return true;
+        }
+        if (anObject instanceof BigVec) {
+            BigVec aBigVec = (BigVec)anObject;
+            if (aBigVec.size != this.size) return false;
+            for (int i = 0; i < this.size; ++i) {
+                if (!aBigVec.bigs[i].equals(bigs[i]))
+                    return false;
+            }
+            return true;
+        }
+        return false;
+    }
+
+    public static BigVec genPRGBigVec(String seed, int bSize) {
+        PRG prg = new PRG(seed);
+        return new BigVec(prg.genBigs(bSize));
+    }
+
+	public BigVec multiply(BigInteger val) {
+        BigVec v = BigVec.One(this.size);
+        for (int i = 0; i < this.size; ++i) {
+            v.bigs[i] = this.bigs[i].multiply(val);
+        }
+		return v;
+	}
 }
