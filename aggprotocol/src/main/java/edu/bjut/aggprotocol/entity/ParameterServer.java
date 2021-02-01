@@ -7,6 +7,7 @@ import java.util.Iterator;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.StopWatch;
 
 import edu.bjut.common.shamir.SecretShare;
 import edu.bjut.common.shamir.SecretShareBigInteger;
@@ -47,6 +48,7 @@ public class ParameterServer {
 
     private boolean fails[];
     private int failNum;
+    private StopWatch stopWatch = new StopWatch("server");
 
     public ParameterServer() throws IOException {
         this.pairing = PairingFactory.getPairing("aggVote1.properties");
@@ -76,9 +78,11 @@ public class ParameterServer {
      * @param reg
      */
     public void getRegMessage(RegMessage reg) {
+        this.stopWatch.start("register");
         allId.add(reg.getId());
         allKeys.add(reg.getKey());
         allQi.add(reg.getQi());
+        this.stopWatch.stop();
     }
 
     
@@ -89,10 +93,12 @@ public class ParameterServer {
      * @return RegBack
      */
     public RegBack genRegBack(int index) {
+        this.stopWatch.start("response");
         int pre = (index - 1 + allKeys.size()) % allKeys.size();
         int next = (index + 1) % allKeys.size();
 
         RegBack back = new RegBack(allQi, allKeys.get(pre), allKeys.get(next));
+        this.stopWatch.stop();
         return back;
     }
 
@@ -103,7 +109,9 @@ public class ParameterServer {
      * @param reg2
      */
     public void getRegMessage2(RegMessage2 reg2) {
+        this.stopWatch.start("collect xi");
         allXi.add(reg2.getXi());
+        this.stopWatch.stop();
     }
 
     
@@ -114,6 +122,7 @@ public class ParameterServer {
      * @return RegBack2
      */
     public RegBack2 genRegBack2(int index) {
+        this.stopWatch.start("Ti");
         int n = allXi.size();
         int c = n - 1;
         Element ti = pairing.getG1().newOneElement();
@@ -124,6 +133,7 @@ public class ParameterServer {
         }
 
         RegBack2 back = new RegBack2(ti);
+        this.stopWatch.stop();
         return back;
     }
 
@@ -134,7 +144,9 @@ public class ParameterServer {
      * @param reg2
      */
     public void getRegMessage3(RegMessage3 reg2) {
+        this.stopWatch.start("collect_ki");
         this.allki.add(reg2.getKeys());
+        this.stopWatch.stop();
     }
 
     /** 
@@ -143,6 +155,7 @@ public class ParameterServer {
      * @param reg2
      */
     public RegBack3 genRegBack3(int i) {
+        this.stopWatch.start("all_ki");
         ArrayList<SecretShareBigInteger> alkiBack = new ArrayList<SecretShareBigInteger>();
 
         Iterator<SecretShareBigInteger[]> itKi = allki.iterator();
@@ -151,44 +164,51 @@ public class ParameterServer {
             alkiBack.add(tem);
         }
         RegBack3 back = new RegBack3(alkiBack);
+        this.stopWatch.stop();
         return back;
     }
 
-    public RepMessage getRepMessage(RepMessage rep) throws IOException {
+    public RepMessage getRepMessage(RepMessage rep) {
+        RepMessage res = null;
         alRep.add(rep);
         if (alRep.size() < this.allId.size())
-            return null;
-
+            return res;
+        this.stopWatch.start("sum_all");
         if (false == checkingIncomeMessage()) {
             LOG.warn("check failed at the server");
-            return null;
+            return res;
         }
-        return genRepMessage(sumUpReportingData(), rep.getTi());
+        res = genRepMessage(sumUpReportingData(), rep.getTi());
+        this.stopWatch.stop();
+        return res; 
     }
 
-    public RepMessage getRepKeys(RepKeys rep) throws IOException {
+    public RepMessage getRepKeys(RepKeys rep) {
+        RepMessage res= null;
         alRepKeys.add(rep);
         if (alRepKeys.size() < Params.RECOVER_K) {
-            return null;
+            return res;
         }
-
+        this.stopWatch.start("agg");
         if (false == checkingRepKeys()) {
             System.out.println("check failed at the agg side");
-            return null;
+            return res;
         }
-        return genRepMessage(sumUpFailsData(), rep.getTi());
+        res = genRepMessage(sumUpFailsData(), rep.getTi());
+        this.stopWatch.stop();
+        return res;
     }
 
     /**
      * A meter report multiple types of data to aggregator at a time
      */
-    public RepMessage genRepMessage(BigVec data, int count) throws IOException {
+    public RepMessage genRepMessage(BigVec data, int count) {
         Element temEle = Utils.hash2ElementG1(data.toString() + id + count, this.pairing);
         Element si = temEle.duplicate().mul(this.dj);
         return new RepMessage(id, data, si, count);
     }
 
-    private BigVec sumUpReportingData() throws IOException {
+    private BigVec sumUpReportingData() {
         int gSize = alRep.get(0).getCi().size();
 
         BigVec ci = BigVec.Zero(gSize);
@@ -196,12 +216,11 @@ public class ParameterServer {
         while (itRep.hasNext()) {
             ci = ci.add(itRep.next().getCi());
         }
-
         clearReportMessage();
         return ci;
     }
 
-    private BigVec sumUpFailsData() throws IOException {
+    private BigVec sumUpFailsData() {
         int gSize = alRep.get(0).getCi().size();
         BigVec ci = BigVec.Zero(gSize);
         Iterator<RepMessage> itRep = alRep.iterator();
@@ -232,7 +251,6 @@ public class ParameterServer {
             BigVec pi = genPi(tem, pos[i], gSize);
             ci = ci.add(pi);
         }
-
         clearReportMessage();
         return ci;
     }
@@ -327,19 +345,16 @@ public class ParameterServer {
         return pi;
     }
 
-    private boolean checkingRepKeys() throws IOException {
-
+    private boolean checkingRepKeys() {
         ArrayList<BigInteger> alFai = prepareFai();
 
         Element left = PrepareLeftRepKeys(alFai);
         Element right = PrepareRightRepKeys(alFai);
 
         if (!left.equals(right)) {
-            System.out.println("left ::: " + left);
-            System.out.println("right::: " + right);
-            System.out.println("RepKeys RepKeys RepKeys not equal to left failed!");
+            LOG.warn("verify fail.");
         } else {
-//          System.out.println("recovering keys, please wait!!!");
+            LOG.info("recovering keys");
         }
         return true;
     }
@@ -389,8 +404,7 @@ public class ParameterServer {
         return result;
     }
 
-    private boolean checkingIncomeMessage() throws IOException {
-
+    private boolean checkingIncomeMessage() {
         ArrayList<BigInteger> alFai = prepareFai();
 
         Element left = PrepareLeft(alFai);
@@ -399,7 +413,7 @@ public class ParameterServer {
         if (!left.equals(right)) {
             LOG.debug("left :" + left);
             LOG.debug("right : " + right);
-            LOG.debug(" verification fails");
+            LOG.warn("verification fails");
         }
         return true;
     }
@@ -462,13 +476,13 @@ public class ParameterServer {
         return allKeys.get(index);
     }
 
-    private void clearReportMessage() throws IOException {
+    private void clearReportMessage() {
         alRep.clear();
         allki.clear();
         alRepKeys.clear();
     }
 
-    public void clear() throws IOException {
+    public void clear() {
         allId.clear();
         allKeys.clear();
         allXi.clear();
@@ -479,6 +493,10 @@ public class ParameterServer {
     public Element assignMeterKeys(long id2, int i) {
         // TODO Auto-generated method stub
         return null;
+    }
+
+    public StopWatch getStopWatch() {
+        return this.stopWatch;
     }
 
 }

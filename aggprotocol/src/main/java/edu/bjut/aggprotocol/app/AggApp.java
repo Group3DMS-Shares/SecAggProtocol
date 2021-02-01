@@ -42,15 +42,16 @@ public class AggApp {
         for (int i = 0; i < Params.PARTICIPANT_NUM; ++i) {
             participants.add(new Participant(ps, gNum));
         }
-        ImproveAggregation improveAggregation = new ImproveAggregation(parameterServer, participants);
+        ImproveAggregation improveAggregation = new ImproveAggregation(parameterServer, participants, failNum);
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
         // registration phrase
         improveAggregation.registrationPhase();
         // data aggregation
-        improveAggregation.dataAggregation(failNum);
+        improveAggregation.dataAggregation();
         stopWatch.stop();
-        LOG.warn("" + stopWatch.getLastTaskTimeMillis());
+        improveAggregation.allStatics();
+        LOG.warn(Long.toString(stopWatch.getLastTaskTimeMillis()));
     }
     
     

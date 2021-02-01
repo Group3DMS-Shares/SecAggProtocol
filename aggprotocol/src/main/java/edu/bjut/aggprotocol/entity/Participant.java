@@ -7,6 +7,7 @@ import java.util.ArrayList;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.StopWatch;
 
 import edu.bjut.common.shamir.SecretShare;
 import edu.bjut.common.shamir.SecretShareBigInteger;
@@ -41,14 +42,15 @@ public class Participant {
 
     private BigInteger order;
     private Element g;
-    private int count;
+    private int count = 1;
 
     ArrayList<Element> allQi = new ArrayList<Element>();
     ArrayList<SecretShareBigInteger> alKi = new ArrayList<SecretShareBigInteger>();
 
     private int gSize = 1;
+    private StopWatch stopWatch;
 
-    public Participant(ParamsECC ps) throws IOException {
+    public Participant(ParamsECC ps) {
         this.pairing = ps.getPairing();
         this.g = ps.getGeneratorOfG1().getImmutable();
         this.order = pairing.getG1().getOrder();
@@ -58,6 +60,7 @@ public class Participant {
 
         this.ri = this.g.pow(this.di);
         this.qi = this.g.pow(this.ki);
+        this.stopWatch = new StopWatch("user_" + this.id);
     }
 
     public Participant(ParamsECC ps, int gSize) throws IOException {
@@ -71,15 +74,19 @@ public class Participant {
         this.ri = this.g.pow(this.di);
         this.qi = this.g.pow(this.ki);
         this.gSize = gSize;
+        this.stopWatch = new StopWatch("user_" + this.id);
     }
 
 
     public RegMessage genRegMesssage() {
+        this.stopWatch.start("register");
         RegMessage reg = new RegMessage(this.id, this.ri, this.qi);
+        this.stopWatch.stop();
         return reg;
     }
 
     public RegMessage2 getRegBack(RegBack back) {
+        this.stopWatch.start("xi");
         allQi = back.getAlKeys();
 
         zi = back.getRi1().duplicate().mul(this.di);
@@ -87,10 +94,12 @@ public class Participant {
 
         Element xi = zi1.duplicate().sub(zi);
         RegMessage2 reg = new RegMessage2(xi);
+        this.stopWatch.stop();
         return reg;
     }
 
     public RegMessage3 getRegBack2(RegBack2 back2) {
+        this.stopWatch.start("ki");
         Element tem = this.zi.duplicate().mul(BigInteger.valueOf(Params.PARTICIPANT_NUM));
         tem.mul(back2.getTi());
         String orgStr = tem.toString();
@@ -98,6 +107,7 @@ public class Participant {
         SecretShareBigInteger[] keys = genKi(Params.PARTICIPANT_NUM);
 
         RegMessage3 reg3 = new RegMessage3(this.id, keys);
+        this.stopWatch.stop();
         return reg3;
     }
 
@@ -108,25 +118,29 @@ public class Participant {
     }
 
     public void getRegBack3(RegBack3 back3) {
+        this.stopWatch.start("all_ki");
         this.alKi = back3.getAlKeys();
+        this.stopWatch.stop();
     }
 
     public long getId() {
         return this.id;
     }
 
-    public RepMessage genRepMessage() throws IOException {
-        if (count++ > 2401)
-            count = 1;
+    public RepMessage genRepMessage() {
+        this.stopWatch.start("report_data");
+        if (this.count++ > 2401) {
+            this.count = 1;
+        }
 
         BigVec ci = getEncryptedWeights();
 
         Element temEle = Utils.hash2ElementG1(ci.toString() + id + count, this.pairing);
         Element si = temEle.duplicate().mul(this.di);
 
-        Element hr = Utils.hash2ElementG1(Integer.toString(count), pairing);
+        Element hr = Utils.hash2ElementG1(Integer.toString(count), this.pairing);
         LOG.debug("ki: " + hr.duplicate().mul(this.ki));
-
+        this.stopWatch.stop();
         return new RepMessage(id, ci, si, count);
     }
 
@@ -143,11 +157,13 @@ public class Participant {
     }
 
     // generates the keys
-    public RepKeys genRepKeys(boolean fails[], int num) throws IOException {
+    public RepKeys genRepKeys(boolean fails[], int num) {
+        this.stopWatch.start("fail_recovery");
         SecretShare[] ci = getShares(fails, num);
 
         Element temEle = Utils.hash2ElementG1(ci.toString() + id + count, this.pairing);
         Element si = temEle.duplicate().mul(this.di);
+        this.stopWatch.stop();
         return new RepKeys(id, ci, si, count);
     }
 
@@ -171,30 +187,29 @@ public class Participant {
         Element hr = Utils.hash2ElementG1(Integer.toString(count), pairing);
 
         for (int i = 0; i < index; i++) {
-            Element tem = this.pairing.pairing(allQi.get(i), hr).duplicate().mul(this.ki);
+            Element tem = this.pairing.pairing(allQi.get(i), hr).getImmutable().mul(this.ki);
             LOG.debug(i + " add: " +tem.toBigInteger());
             pi = pi.add(BigVec.genPRGBigVec(tem.toBigInteger().toString(), this.gSize));
         }
         for (int i = index + 1; i < allQi.size(); i++) {
-            Element tem = this.pairing.pairing(allQi.get(i), hr).duplicate().mul(this.ki);
+            Element tem = this.pairing.pairing(allQi.get(i), hr).getImmutable().mul(this.ki);
             LOG.debug(i + " subtract: " +tem.toBigInteger());
             pi = pi.subtract(BigVec.genPRGBigVec(tem.toBigInteger().toString(), this.gSize));
         }
         return pi;
     }
 
-    public void getRepMessage(RepMessage rep) throws IOException {
-        BigInteger ni = Utils.hash2Big(Long.toString(this.k + this.count), this.order);
-        ni = ni.multiply(BigInteger.valueOf(this.allQi.size()));
-        BigVec niVec = BigVec.genPRGBigVec(ni.toString(), this.gSize);
-        LOG.info("data: " + rep.getCi().subtract(niVec));
-    }
-
-    public void getRepMessageFails(RepMessage rep, int failNum) throws IOException {
+    public void getRepMessageFails(RepMessage rep, int failNum) {
+        this.stopWatch.start("agg_result");
         BigInteger ni = Utils.hash2Big(Long.toString(this.k + this.count), this.order);
         BigVec niVec = BigVec.genPRGBigVec(ni.toString(), this.gSize);
         niVec = niVec.multiply(BigInteger.valueOf(this.allQi.size() - failNum));
         LOG.info("data: " + rep.getCi().subtract(niVec));
+        this.stopWatch.stop();
+    }
+
+    public StopWatch getStopWatch() {
+        return this.stopWatch;
     }
 
 }

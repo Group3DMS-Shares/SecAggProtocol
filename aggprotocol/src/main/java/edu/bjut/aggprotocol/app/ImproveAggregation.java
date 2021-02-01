@@ -1,10 +1,11 @@
 package edu.bjut.aggprotocol.app;
 
-import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.StopWatch;
 
 import edu.bjut.aggprotocol.entity.ParameterServer;
 import edu.bjut.aggprotocol.entity.Participant;
@@ -23,10 +24,15 @@ public class ImproveAggregation {
 
     private ParameterServer parameterServer;
     private List<Participant> participants;
+    private boolean[] fails; 
+    private int failNum;
 
-    public ImproveAggregation(ParameterServer parameterServer, List<Participant> participants) {
+    public ImproveAggregation(ParameterServer parameterServer, List<Participant> participants, int failNum) {
         this.parameterServer = parameterServer;
         this.participants = participants;
+        this.failNum = failNum;
+        this.fails = Utils.setFailedParticipants(failNum, this.participants.size());
+        this.parameterServer.settingFails(this.fails, this.failNum);
     }
 
     public boolean registrationPhase() {
@@ -63,14 +69,12 @@ public class ImproveAggregation {
         return true;
     }
 
-    public void dataAggregation(int failNum) throws IOException {
+    public void dataAggregation() {
         LOG.info("Start data aggregation.");
-        boolean[] fails = Utils.setFailedParticipants(failNum, this.participants.size());
-        this.parameterServer.settingFails(fails, failNum);
         RepMessage rep = null;
         // participant reports their data to the parameter server. 
         for (int i = 0; i < this.participants.size(); i++) {
-            if (!fails[i]) {
+            if (!this.fails[i]) {
                 RepMessage repMessage = participants.get(i).genRepMessage();
                 rep = parameterServer.getRepMessage(repMessage);
             }
@@ -79,7 +83,7 @@ public class ImproveAggregation {
         // generates keys for participants
         if (failNum > 0) {
             for (int i = 0; i < this.participants.size(); i++) {
-                if (!fails[i]) {
+                if (!this.fails[i]) {
                     RepKeys repKeys = this.participants.get(i).genRepKeys(fails, failNum);
                     rep = parameterServer.getRepKeys(repKeys);
                     if (null != rep)
@@ -94,10 +98,49 @@ public class ImproveAggregation {
         }
         // sends the recovered data back to participants
         for (int i = 0; i < this.participants.size(); ++i) {
-            if (!fails[i]) {
+            if (!this.fails[i]) {
                 this.participants.get(i).getRepMessageFails(rep, failNum);
             }
         }
+    }
+
+    void allStatics() {
+        long serverTotal = timeStatics(this.parameterServer.getStopWatch());
+        List<Long> clientElapses = new ArrayList<>();
+        for (int i = 0; i < this.participants.size(); ++i) {
+            if (!fails[i]) {
+                clientElapses.add(timeStatics(this.participants.get(i).getStopWatch()));
+            }
+        }
+        long clientTotal = 0;
+        for (var i : clientElapses) {
+            LOG.warn("client:" + i);
+            clientTotal += i;
+        }
+        LOG.warn("server:" + serverTotal);
+        LOG.warn("total: " + (serverTotal + clientTotal));
+    }
+
+    private long timeStatics(StopWatch stopWatch) {
+        var taskInfos = stopWatch.getTaskInfo();
+        int len = taskInfos.length;
+        StringBuilder headBuilder = new StringBuilder();
+        for (int i = 0; i < len; ++i) {
+            headBuilder = headBuilder.append(taskInfos[i].getTaskName());
+            if (i != len - 1) {
+                headBuilder = headBuilder.append(",");
+            }
+        }
+        StringBuilder timeBuilder = new StringBuilder();
+        for (int i = 0; i < len; ++i) {
+            timeBuilder = timeBuilder.append(taskInfos[i].getTimeMillis());
+            if (i != len - 1) {
+                timeBuilder = timeBuilder.append(",");
+            }
+        }
+        LOG.warn(headBuilder.toString());
+        LOG.warn(timeBuilder.toString());
+        return stopWatch.getTotalTimeMillis();
     }
 
 }
