@@ -11,6 +11,6 @@ do
     for i in {100..501..50}
     do
         fail=$(echo "${m}*${i}/1"|bc)
-        java -cp aggprotocol/target/aggprotocol-1.0-SNAPSHOT-jar-with-dependencies.jar edu.bjut.aggprotocol.app.AggApp -u $i -f $fail -g 10000 >> log/${m}_${i}_10000.log
+        java -cp aggprotocol/target/aggprotocol-1.0-SNAPSHOT-jar-with-dependencies.jar  -Xms8086m -Xmx20480m  edu.bjut.aggprotocol.app.AggApp -u $i -f $fail -g 100000 >> log/${m}_${i}_100000.log
     done
 done
