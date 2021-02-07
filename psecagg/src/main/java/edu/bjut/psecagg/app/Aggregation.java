@@ -2,7 +2,13 @@ package edu.bjut.psecagg.app;
 
 import java.util.ArrayList;
 import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.util.StopWatch;
+
 import java.util.HashMap;
+import java.util.List;
 
 import edu.bjut.psecagg.messages.MsgRound4;
 import edu.bjut.common.big.BigVec;
@@ -13,13 +19,21 @@ import it.unisa.dia.gas.jpbc.Element;
 
 public class Aggregation {
 
+    private Logger LOG = LoggerFactory.getLogger(Aggregation.class);
+
     private ParameterServer parameterServer;
     private ArrayList<Participant> participants;
+    private int failNum = 0;
 
     public Aggregation(ParameterServer parameterServer, ArrayList<Participant> participants) {
         this.parameterServer = parameterServer;
         this.participants = participants;
+    }
 
+    public Aggregation(ParameterServer parameterServer, ArrayList<Participant> participants, int failNum) {
+        this.parameterServer = parameterServer;
+        this.participants = participants;
+        this.failNum = failNum;
     }
 
     public void distributeSignPubKeys() {
@@ -47,8 +61,8 @@ public class Aggregation {
         return this.parameterServer.sendMsgResponseRound1();
     }
 
-    public MsgResponseRound2 maskedInputCollection(MsgResponseRound1 msgResponse1, int failNum) {
-        for (int i = 0; i < this.participants.size() - failNum; ++i) {
+    public MsgResponseRound2 maskedInputCollection(MsgResponseRound1 msgResponse1) {
+        for (int i = 0; i < this.participants.size() - this.failNum; ++i) {
             MsgRound2 msgRound2 = this.participants.get(i).sendMsgRound2(msgResponse1);
             this.parameterServer.recvMsgRound2(msgRound2);
         }
@@ -70,5 +84,42 @@ public class Aggregation {
         }
 
         return this.parameterServer.outputZ();
+    }
+
+    void allStatics() {
+        long serverTotal = timeStatics(this.parameterServer.getStopWatch());
+        List<Long> clientElapses = new ArrayList<>();
+        for (int i = 0; i < this.participants.size() - this.failNum; ++i) {
+            clientElapses.add(timeStatics(this.participants.get(i).getStopWatch()));
+        }
+        long clientTotal = 0;
+        for (var i : clientElapses) {
+            LOG.warn("client:" + i);
+            clientTotal += i;
+        }
+        LOG.warn("server:" + serverTotal);
+        LOG.warn("total: " + (serverTotal + clientTotal));
+    }
+
+    private long timeStatics(StopWatch stopWatch) {
+        var taskInfos = stopWatch.getTaskInfo();
+        int len = taskInfos.length;
+        StringBuilder headBuilder = new StringBuilder();
+        for (int i = 0; i < len; ++i) {
+            headBuilder = headBuilder.append(taskInfos[i].getTaskName());
+            if (i != len - 1) {
+                headBuilder = headBuilder.append(",");
+            }
+        }
+        StringBuilder timeBuilder = new StringBuilder();
+        for (int i = 0; i < len; ++i) {
+            timeBuilder = timeBuilder.append(taskInfos[i].getTimeMillis());
+            if (i != len - 1) {
+                timeBuilder = timeBuilder.append(",");
+            }
+        }
+        LOG.warn(headBuilder.toString());
+        LOG.warn(timeBuilder.toString());
+        return stopWatch.getTotalTimeMillis();
     }
 }

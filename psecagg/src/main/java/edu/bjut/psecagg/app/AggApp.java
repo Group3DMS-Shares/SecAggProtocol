@@ -44,7 +44,7 @@ public class AggApp {
             // generate secret key and public key for each user
             participants.add(new Participant(paramsECC, gNum));
         }
-        Aggregation aggregation = new Aggregation(parameterServer, participants);
+        Aggregation aggregation = new Aggregation(parameterServer, participants, failNum);
 
         // Distribute sign public keys to all user
         aggregation.distributeSignPubKeys();
@@ -59,7 +59,7 @@ public class AggApp {
         if (null == msgResponse1) throw new RuntimeException("smaller than share threshold");
 
         // Round 2
-        var msgResponse2 = aggregation.maskedInputCollection(msgResponse1, failNum);
+        var msgResponse2 = aggregation.maskedInputCollection(msgResponse1);
         if (null == msgResponse2) throw new RuntimeException("smaller than share threshold");
 
         // Round 3
@@ -70,6 +70,7 @@ public class AggApp {
         BigVec z = aggregation.unmasking(msgResponse3);
         LOG.info("Aggregation results: " + z.toString());
         stopWatch.stop();
+        aggregation.allStatics();
         LOG.warn("" + stopWatch.getLastTaskTimeMillis());
     }
 }

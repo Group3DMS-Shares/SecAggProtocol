@@ -18,6 +18,7 @@ import it.unisa.dia.gas.jpbc.Pairing;
 import it.unisa.dia.gas.plaf.jpbc.pairing.PairingFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.StopWatch;
 
 public class ParameterServer {
 
@@ -51,11 +52,17 @@ public class ParameterServer {
     // Round 4
     Map<Long, ArrayList<SecretShareBigInteger>> buMap = new HashMap<>();
     Map<Long, ArrayList<SecretShareBigInteger>> svnMap = new HashMap<>();
+    // Time statistic
+    private StopWatch stopWatch = new StopWatch("server");
 
     public ParameterServer() {
         this.pairing = PairingFactory.getPairing("aggVote1.properties");
         this.order = pairing.getG1().getOrder();
         this.g = this.pairing.getG1().newRandomElement().getImmutable();
+    }
+
+    public StopWatch getStopWatch() {
+        return this.stopWatch;
     }
 
     public ParamsECC getParamsECC() {
@@ -64,9 +71,11 @@ public class ParameterServer {
     }
 
     public void recvMsgRound0(MsgRound0 msgRound0) {
+        this.stopWatch.start("round0_receive");
         msgRound0s.add(msgRound0);
         this.sPk_uMap.put(msgRound0.getId(), msgRound0.getsPk_u());
         this.cPk_uMap.put(msgRound0.getId(), msgRound0.getcPk_u());
+        this.stopWatch.stop();
     }
 
     public MsgResponseRound0 sendMsgResponseRound0() {
@@ -77,14 +86,16 @@ public class ParameterServer {
     }
 
     public void recvMsgRound1(MsgRound1 msgRound1) {
+        this.stopWatch.start("round1_receive");
         this.allMsgRound1s.add(msgRound1);
         this.u2ids.add(msgRound1.getId());
+        this.stopWatch.stop();
     }
 
     public MsgResponseRound1 sendMsgResponseRound1() {
         this.u2Count = this.allMsgRound1s.size();
         // TODO t-out-of-n check
-        assert (this.u1Count >= Params.RECOVER_K);
+        assert (this.u2Count >= Params.RECOVER_K);
         return new MsgResponseRound1(this.allMsgRound1s);
     }
 
@@ -96,20 +107,25 @@ public class ParameterServer {
     public MsgResponseRound2 sendMsgResponseRound2() {
         // TODO t-out-of-n check
         this.u3Count = this.u3Ids.size();
+        assert (this.u3Count >= Params.RECOVER_K);
         return new MsgResponseRound2(u3Ids);
     }
 
     public void recvMsgRound3(MsgRound3 msgRound3) {
+        this.stopWatch.start("round3_send");
         this.u4Sigmas.add(msgRound3);
+        this.stopWatch.stop();
     }
 
     public MsgResponseRound3 sendMsgResponseRound3() {
-        // TODO t-out-of-n check
         this.u4Count = this.u4Sigmas.size();
+        // TODO t-out-of-n check
+        assert (this.u4Count >= Params.RECOVER_K);
         return new MsgResponseRound3(this.u4Sigmas);
     }
 
     public void recvMsgRound4(MsgRound4 msgRound4) {
+        this.stopWatch.start("round4_recive");
         var betaShares = msgRound4.getBetaShares();
         var svnShares = msgRound4.getSvuShares();
         betaShares.forEach(x -> {
@@ -120,9 +136,11 @@ public class ParameterServer {
             this.svnMap.computeIfAbsent(x.getId(), k -> new ArrayList<>());
             this.svnMap.get(x.getId()).add(x.getUShare());
         });
+        this.stopWatch.stop();
     }
 
     public BigVec outputZ() {
+        this.stopWatch.start("agg");
         int gSize = this.y_uList.get(0).size();
         BigVec sigmaX_u = BigVec.Zero(gSize);
         for (var x : y_uList) {
@@ -169,6 +187,7 @@ public class ParameterServer {
             }
         }
         sigmaX_u = sigmaX_u.subtract(pu).subtract(puv);
+        this.stopWatch.stop();
         return sigmaX_u;
     }
 }

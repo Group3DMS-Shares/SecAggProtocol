@@ -14,6 +14,7 @@ import javax.crypto.Cipher;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.StopWatch;
 
 import edu.bjut.common.aes.AesCipher;
 import edu.bjut.common.big.BigVec;
@@ -37,30 +38,24 @@ import it.unisa.dia.gas.jpbc.Pairing;
 public class Participant {
 
     static final Logger LOG = LoggerFactory.getLogger(Participant.class);
-
     // pairing parameters
     private final Pairing pairing;
     private final BigInteger order;
     private final Element g;
-
     // for signature
     private final BigInteger duSk;
     private final Element duPk;
-
     // gradient
     private BigVec x_u = BigVec.One(1);
     private int gSize = 1;
 
     private final long id = Utils.incrementId();;
     private Map<Long, Element> signPubKeys = new HashMap<>();
-
     // round 0 keys
     private BigInteger cSk_u;
     private Element cPk_u;
-
     private BigInteger sSk_u;
     private Element sPk_u;
-
     // round 2
     private Set<Long> u2ids = new HashSet<>();
     private BigInteger b_u;
@@ -71,6 +66,8 @@ public class Participant {
     // round 3
     private Set<Long> u3ids = new HashSet<>();
     private Map<Long, CipherShare> cipherShareMap = new HashMap<>();
+    // time statistic
+    private StopWatch stopWatch = new StopWatch("client");
 
     public Participant(ParamsECC ps) {
         this.pairing = ps.getPairing();
@@ -107,6 +104,10 @@ public class Participant {
         this.signPubKeys = signPubKeys;
     }
 
+    public StopWatch getStopWatch() {
+        return this.stopWatch;
+    }
+
     private boolean verifySign(long id, Element lcPk_u, Element lsPk_u, Element sigma_u) {
         LOG.debug("verify id: " + id);
         String msg = lcPk_u.toString() + lsPk_u.toString();
@@ -123,19 +124,21 @@ public class Participant {
     }
 
     public MsgRound0 sendMsgRound0() {
+        this.stopWatch.start("round0_send");
         // generate key pairs
         // (c^PK_u, c^SK_u),
         this.cSk_u = Utils.randomBig(order);
-        this.cPk_u = g.duplicate().pow(this.cSk_u);
+        this.cPk_u = this.g.pow(this.cSk_u);
         // (s^PK_u, s^SK_u), sigma_u
         this.sSk_u = Utils.randomBig(order);
-        this.sPk_u = g.duplicate().pow(this.sSk_u).getImmutable();
+        this.sPk_u = this.g.pow(this.sSk_u).getImmutable();
         LOG.debug(this.id + ", private: " + this.sSk_u + ", public: " + this.sPk_u);
         // sigma_u
         String msg = cPk_u.toString() + sPk_u.toString();
         LOG.info("sign msg: " + msg);
         Element hash = Utils.hash2ElementG1(msg, this.pairing).getImmutable();
         Element sigma_u = hash.pow(this.duSk);
+        this.stopWatch.stop();
         return new MsgRound0(this.id, this.cPk_u, this.sPk_u, sigma_u);
     }
 
@@ -146,6 +149,7 @@ public class Participant {
     }
 
     public MsgRound1 sendMsgRound1(MsgResponseRound0 msgResponse) {
+        this.stopWatch.start("round1_send");
         var msg = msgResponse.getPubKeys();
         for (var m : msg) {
             if (this.id == m.getId())
@@ -188,10 +192,12 @@ public class Participant {
                 e.printStackTrace();
             }
         }
+        this.stopWatch.stop();
         return new MsgRound1(this.id, cipherShares);
     }
 
     public MsgRound2 sendMsgRound2(MsgResponseRound1 msgResponse1) {
+        this.stopWatch.start("round2_send");
         ArrayList<MsgRound1> msgResponses = msgResponse1.getMsgRound1s();
         for (var m : msgResponses) {
             var uvCipherShares = m.getCiperShares();
@@ -204,6 +210,7 @@ public class Participant {
         }
         var bUPrg = BigVec.genPRGBigVec(this.b_u.toString(), this.gSize);
         BigVec y_u = this.x_u.add(bUPrg).add(genMaskedInputCollection());
+        this.stopWatch.stop();
         return new MsgRound2(this.id, y_u);
     }
 
@@ -229,16 +236,19 @@ public class Participant {
     }
 
     public MsgRound3 sendMsgRound3(MsgResponseRound2 msgResponse2) {
+        this.stopWatch.start("round3_send");
         var idList = msgResponse2.getU3ids();
         this.u3ids.addAll(idList);
         StringBuilder stringBuilder = new StringBuilder();
         idList.forEach(stringBuilder::append);
         String msg = stringBuilder.toString();
         Element signature = Utils.hash2ElementG1(msg, this.pairing).mul(this.duSk);
+        this.stopWatch.stop();
         return  new MsgRound3(this.id, signature);
     }
 
     public MsgRound4 sendMsgRound4(MsgResponseRound3 msgResponse3) {
+        this.stopWatch.start("round4_send");
         // verify
         for (var s : msgResponse3.getSigmas()) {
             StringBuilder stringBuilder = new StringBuilder();
@@ -276,6 +286,7 @@ public class Participant {
                 throw new RuntimeException("decrypt shares error: " + e.getMessage());
             }
         }
+        this.stopWatch.stop();
         return new MsgRound4(betaShares, uShares);
     }
 

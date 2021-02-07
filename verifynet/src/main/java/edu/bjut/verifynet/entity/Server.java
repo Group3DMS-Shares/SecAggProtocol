@@ -19,6 +19,7 @@ import it.unisa.dia.gas.jpbc.Pairing;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.StopWatch;
 
 public class Server {
     private final static Logger LOG = LoggerFactory.getLogger(Server.class);
@@ -36,6 +37,7 @@ public class Server {
     private BigInteger q;
     private int u1Count = 0;
     private ArrayList<ArrayList<MessageCipherPNM>> messageCipherPNMs = new ArrayList<>();
+    private StopWatch stopWatch = new StopWatch("client");
 
     public Server() { }
 
@@ -95,6 +97,7 @@ public class Server {
     }
 
     public void broadcastToCipherPMN(ArrayList<User> users) {
+        this.stopWatch.start("round1_broadcast");
         for (int i = 0; i < Params.PARTICIPANT_NUM; ++i) {
             for (int j = 0; j < Params.PARTICIPANT_NUM; ++j) {
                 if (i == j) {
@@ -104,12 +107,15 @@ public class Server {
                 }
             }
         }
+        this.stopWatch.stop();
     }
 
     public void broadcastToIds(ArrayList<User> users) {
+        this.stopWatch.start("round2_broadcast");
         for (User u : users) {
             u.getU3ids().addAll(receiveSigmaIds);
         }
+        this.stopWatch.stop();
     }
 
     public void receiveMsgAggBeta(ArrayList<MessageBetaShare> sendBetaShare) {
@@ -205,11 +211,17 @@ public class Server {
     }
 
     public void broadcastToAggResultAndProof(ArrayList<User> users) {
-            LOG.info("Aggregation Result: " + calculateOmeagXn());
+        this.stopWatch.start("agg_result");
+        LOG.info("Aggregation Result: " + calculateOmeagXn());
+        this.stopWatch.stop();
     }
 
     public boolean checkU1Count(int RECOVER_K) {
         return u1Count >= RECOVER_K;
+    }
+
+    public StopWatch getStopWatch() {
+        return this.stopWatch;
     }
 
 }

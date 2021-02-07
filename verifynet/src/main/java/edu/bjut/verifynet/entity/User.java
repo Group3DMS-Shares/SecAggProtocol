@@ -9,6 +9,7 @@ import javax.crypto.Cipher;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.StopWatch;
 
 import edu.bjut.common.aes.AesCipher;
 import edu.bjut.common.big.BigVec;
@@ -53,6 +54,8 @@ public class User {
 
     private BigVec xN = BigVec.One(1);
     private int gLen = 1;
+
+    private StopWatch stopWatch = new StopWatch();
 
     public User() { }
 
@@ -149,8 +152,10 @@ public class User {
     }
 
     public MessageSigma genMessageSigma() {
+        this.stopWatch.start("round2_gen_sigma");
         MessageSigma messageSigma = new MessageSigma(genEncGradient());
         messageSigma.setId(this.id);
+        this.stopWatch.stop();
         return messageSigma;
     }
 
@@ -178,6 +183,7 @@ public class User {
 
 
     public ArrayList<MessageCipherPNM> genMsgCipherPNMs() {
+        this.stopWatch.start("round1_gen");
         if (broadcastPubKeysList.size() < Params.RECOVER_K)
             throw new RuntimeException("get the num of the public keys smaller than recovery threshold");
 
@@ -199,6 +205,7 @@ public class User {
                 messageCipherPNMList.add(null);
             }
         }
+        this.stopWatch.stop();
         return messageCipherPNMList;
     }
 
@@ -269,6 +276,7 @@ public class User {
     }
 
     public ArrayList<MessageBetaShare> sendCBetaShare() {
+        this.stopWatch.start("round3_send_beta");
         ArrayList<MessageBetaShare> betaShares = new ArrayList<>();
         for (MessageCipherPNM cipherPNM: this.cipherPmnList) {
             if (null == cipherPNM) continue;
@@ -281,10 +289,12 @@ public class User {
                 betaShares.add(betaShare);
             }
         }
+        this.stopWatch.stop();
         return betaShares;
     }
 
     public ArrayList<MessageDroupoutShare> sendCDropoutAndBetaShare(ArrayList<Long> dropOutUsers) {
+        this.stopWatch.start("round2_send_droupout");
         ArrayList<MessageDroupoutShare> dropoutShares = new ArrayList<>();
         for (MessageCipherPNM cipherPNM: this.cipherPmnList ) {
             if (null == cipherPNM) continue;
@@ -295,6 +305,7 @@ public class User {
                 dropoutShares.add(dropoutShare);
             }
         }
+        this.stopWatch.stop();
         return dropoutShares;
     }
 
@@ -365,6 +376,10 @@ public class User {
     public boolean verifyAggregation() {
         // TODO verify
         return true;
+    }
+
+    public StopWatch getStopWatch() {
+        return this.stopWatch;
     }
 
 }

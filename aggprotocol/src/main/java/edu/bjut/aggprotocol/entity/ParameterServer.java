@@ -109,7 +109,7 @@ public class ParameterServer {
      * @param reg2
      */
     public void getRegMessage2(RegMessage2 reg2) {
-        this.stopWatch.start("collect xi");
+        this.stopWatch.start("collect_xi");
         allXi.add(reg2.getXi());
         this.stopWatch.stop();
     }
@@ -171,8 +171,9 @@ public class ParameterServer {
     public RepMessage getRepMessage(RepMessage rep) {
         RepMessage res = null;
         alRep.add(rep);
-        if (alRep.size() < this.allId.size())
+        if (alRep.size() < this.allId.size()) {
             return res;
+        }
         this.stopWatch.start("sum_all");
         if (false == checkingIncomeMessage()) {
             LOG.warn("check failed at the server");
@@ -189,7 +190,7 @@ public class ParameterServer {
         if (alRepKeys.size() < Params.RECOVER_K) {
             return res;
         }
-        this.stopWatch.start("agg");
+        this.stopWatch.start("sum_all");
         if (false == checkingRepKeys()) {
             System.out.println("check failed at the agg side");
             return res;

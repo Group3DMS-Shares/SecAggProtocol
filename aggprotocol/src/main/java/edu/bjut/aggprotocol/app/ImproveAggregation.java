@@ -55,11 +55,11 @@ public class ImproveAggregation {
 
         for (int i = 0; i < this.participants.size(); i++) {
             // server response T_i
-            RegBack2 back2 = parameterServer.genRegBack2(i);
+            RegBack2 back2 = this.parameterServer.genRegBack2(i);
             // generate ki shares
             RegMessage3 reg3 = this.participants.get(i).getRegBack2(back2);
             // collect all shares
-            parameterServer.getRegMessage3(reg3);
+            this.parameterServer.getRegMessage3(reg3);
         }
         // distribute shares to all participant
         for (int i = 0; i < this.participants.size(); ++i) {

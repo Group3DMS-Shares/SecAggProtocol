@@ -1,6 +1,7 @@
 package edu.bjut.verifynet.app;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import edu.bjut.common.util.Params;
 import edu.bjut.verifynet.entity.Server;
@@ -108,16 +109,56 @@ public class App {
         // broadcast the aggregation result: Sigma x_n ...
         server.broadcastToAggResultAndProof(users);
         stopWatch.stop();
-        LOG.warn("" + stopWatch.getLastTaskTimeMillis());
+        allStatics(ta, server, users);
+        LOG.warn(Long.toString(stopWatch.getLastTaskTimeMillis()));
         // round 4
         // TODO verification
-        for (User u: users) {
+        for (User u : users) {
             if (u.verifyAggregation()) {
                 LOG.info(u.getId() + ": verify success");
             } else {
                 LOG.info(u.getId() + ": verify fail");
             }
         }
-        
+
     }
+
+    static void allStatics(TA ta, Server server, ArrayList<User> users) {
+        long taTotal = timeStatics(ta.getStopWatch());
+        long serverTotal = timeStatics(server.getStopWatch());
+        List<Long> clientElapses = new ArrayList<>();
+        for (int i = 0; i < users.size(); ++i) {
+            clientElapses.add(timeStatics(users.get(i).getStopWatch()));
+        }
+        long clientTotal = 0;
+        for (var i : clientElapses) {
+            LOG.warn("client:" + i);
+            clientTotal += i;
+        }
+        LOG.warn("server:" + serverTotal);
+        LOG.warn("total: " + (taTotal + serverTotal + clientTotal));
+    }
+
+    private static long timeStatics(StopWatch stopWatch) {
+        var taskInfos = stopWatch.getTaskInfo();
+        int len = taskInfos.length;
+        StringBuilder headBuilder = new StringBuilder();
+        for (int i = 0; i < len; ++i) {
+            headBuilder = headBuilder.append(taskInfos[i].getTaskName());
+            if (i != len - 1) {
+                headBuilder = headBuilder.append(",");
+            }
+        }
+        StringBuilder timeBuilder = new StringBuilder();
+        for (int i = 0; i < len; ++i) {
+            timeBuilder = timeBuilder.append(taskInfos[i].getTimeMillis());
+            if (i != len - 1) {
+                timeBuilder = timeBuilder.append(",");
+            }
+        }
+        LOG.warn(headBuilder.toString());
+        LOG.warn(timeBuilder.toString());
+        return stopWatch.getTotalTimeMillis();
+    }
+
 }
