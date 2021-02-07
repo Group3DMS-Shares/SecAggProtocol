@@ -1,9 +1,25 @@
 #!/bin/bash
+
+if [ ! -d "log" ]; then
+    mkdir log
+fi
+
 set -e
-for i in {2..500}
+set -x
+
+g=100000
+vm_option="-Xms8086m -Xmx20480m"
+jar1="aggprotocol/target/aggprotocol-1.0-SNAPSHOT-jar-with-dependencies.jar"
+jar2="psecagg/target/psecagg-1.0-SNAPSHOT-jar-with-dependencies.jar"
+jar3="verifynet/target/verifynet-1.0-SNAPSHOT-jar-with-dependencies.jar"
+for m in 0.0 0.3
 do
-    echo $i
-    java -cp aggprotocol/target/aggprotocol-1.0-SNAPSHOT-jar-with-dependencies.jar edu.bjut.aggprotocol.app.AggApp -u $i
-    java -cp psecagg/target/psecagg-1.0-SNAPSHOT-jar-with-dependencies.jar edu.bjut.psecagg.app.AggApp -u $i
-    java -cp verifynet/target/verifynet-1.0-SNAPSHOT-jar-with-dependencies.jar edu.bjut.verifynet.app.App -u $i
+    for i in {100..501..50}
+    do
+        fail=$(echo "${m}*${i}/1"|bc)
+        # java -cp ${jar1} ${vm_option} edu.bjut.aggprotocol.app.AggApp -u $i -f $fail -g $g >> log/agg_${m}_${i}_${g}.log
+        java -cp ${jar2} ${vm_option} edu.bjut.psecagg.app.AggApp -u $i -f $fail -g $g >> log/psec_${m}_${i}_${g}.log
+        java -cp ${jar3} ${vm_option} edu.bjut.verifynet.app.App -u $i -f $fail -g $g >> log/verifynet_${m}_${i}_${g}.log
+
+    done
 done
