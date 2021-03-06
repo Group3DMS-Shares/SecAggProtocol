@@ -135,8 +135,9 @@ public class Participant {
 
         BigVec ci = getEncryptedWeights();
 
-        Element temEle = Utils.hash2ElementG1(ci.toString() + id + count, this.pairing);
-        Element si = temEle.duplicate().mul(this.di);
+        // Element temEle = Utils.hash2ElementG1(ci.toString() + id + count, this.pairing);
+        // Element si = temEle.duplicate().mul(this.di);
+        Element si = null;
 
         Element hr = Utils.hash2ElementG1(Integer.toString(count), this.pairing);
         LOG.debug("ki: " + hr.duplicate().mul(this.ki));

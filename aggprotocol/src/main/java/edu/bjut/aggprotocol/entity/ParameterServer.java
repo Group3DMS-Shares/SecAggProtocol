@@ -175,10 +175,10 @@ public class ParameterServer {
             return res;
         }
         this.stopWatch.start("sum_all");
-        if (false == checkingIncomeMessage()) {
-            LOG.warn("check failed at the server");
-            return res;
-        }
+        // if (false == checkingIncomeMessage()) {
+        //     LOG.warn("check failed at the server");
+        //     return res;
+        // }
         res = genRepMessage(sumUpReportingData(), rep.getTi());
         this.stopWatch.stop();
         return res; 
