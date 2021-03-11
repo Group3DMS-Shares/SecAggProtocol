@@ -162,8 +162,9 @@ public class Participant {
         this.stopWatch.start("fail_recovery");
         SecretShare[] ci = getShares(fails, num);
 
-        Element temEle = Utils.hash2ElementG1(ci.toString() + id + count, this.pairing);
-        Element si = temEle.duplicate().mul(this.di);
+        // Element temEle = Utils.hash2ElementG1(ci.toString() + id + count, this.pairing);
+        // Element si = temEle.duplicate().mul(this.di);
+        Element si = null;
         this.stopWatch.stop();
         return new RepKeys(id, ci, si, count);
     }

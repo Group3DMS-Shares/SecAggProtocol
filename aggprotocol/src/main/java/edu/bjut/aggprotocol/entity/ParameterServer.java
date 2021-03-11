@@ -191,10 +191,10 @@ public class ParameterServer {
             return res;
         }
         this.stopWatch.start("sum_all");
-        if (false == checkingRepKeys()) {
-            System.out.println("check failed at the agg side");
-            return res;
-        }
+        // if (false == checkingRepKeys()) {
+        //     System.out.println("check failed at the agg side");
+        //     return res;
+        // }
         res = genRepMessage(sumUpFailsData(), rep.getTi());
         this.stopWatch.stop();
         return res;
@@ -204,8 +204,9 @@ public class ParameterServer {
      * A meter report multiple types of data to aggregator at a time
      */
     public RepMessage genRepMessage(BigVec data, int count) {
-        Element temEle = Utils.hash2ElementG1(data.toString() + id + count, this.pairing);
-        Element si = temEle.duplicate().mul(this.dj);
+        // Element temEle = Utils.hash2ElementG1(data.toString() + id + count, this.pairing);
+        // Element si = temEle.duplicate().mul(this.dj);
+        Element si = null;
         return new RepMessage(id, data, si, count);
     }
 
