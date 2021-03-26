@@ -212,7 +212,8 @@ public class Server {
 
     public void broadcastToAggResultAndProof(ArrayList<User> users) {
         this.stopWatch.start("agg_result");
-        LOG.info("Aggregation Result: " + calculateOmeagXn());
+        var r = calculateOmeagXn();
+        LOG.info("Aggregation Result: " + r);
         this.stopWatch.stop();
     }
 
