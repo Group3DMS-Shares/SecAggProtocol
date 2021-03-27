@@ -6,6 +6,7 @@ import java.math.BigInteger;
 import java.security.SecureRandom;
 
 import org.junit.Test;
+import org.springframework.util.StopWatch;
 
 import edu.bjut.common.shamir.SecretShare;
 import edu.bjut.common.shamir.SecretShareBigInteger;
@@ -26,11 +27,19 @@ public class ShamirTest {
         Element g = pairing.getG1().newRandomElement().getImmutable();
 
         final BigInteger secret = Shamir.randomBig(order);
+        System.out.println("secret: " + secret);
         final BigInteger prime = order;
         // 2 - at least 2 secret parts are needed to view secret
         // 5 - there are 5 persons that get secret parts
-        final SecretShareBigInteger[] shares = Shamir.split(secret, 2, 50, prime, random);
-
+        StopWatch time = new StopWatch();
+        time.start();
+        final SecretShareBigInteger[] shares = Shamir.split(secret, 2, 100, prime, random);
+        time.stop();
+        System.out.println(time.getLastTaskTimeMillis());
+        time.start();
+        final SecretShareBigInteger[] t = Shamir.split(secret, 2, 500, prime, random);
+        time.stop();
+        System.out.println(time.getLastTaskTimeMillis());
         BigInteger orgResult = Shamir.combine(shares, prime);
         System.out.println("orginal result secret is: " + orgResult.toString());
 
@@ -44,7 +53,8 @@ public class ShamirTest {
 
         
         String org = g.duplicate().mul(secret).toString();
-        System.out.println("org secret is: " + org);
+        System.out.println("the encrypted secret is: " + org);
         assertTrue(result.toString().equals(org));
+        System.out.println("the recovery of encrypted secret is: " + org);
     }
 }
