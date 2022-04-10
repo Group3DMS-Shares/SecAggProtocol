@@ -3,7 +3,10 @@ package edu.bjut.aggprotocol.entity;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,6 +14,7 @@ import org.springframework.util.StopWatch;
 
 import edu.bjut.common.shamir.SecretShare;
 import edu.bjut.common.shamir.SecretShareBigInteger;
+import edu.bjut.common.shamir.Shamir;
 import edu.bjut.common.big.BigVec;
 import edu.bjut.common.messages.ParamsECC;
 import edu.bjut.common.util.Params;
@@ -23,6 +27,7 @@ import edu.bjut.aggprotocol.messages.RegMessage2;
 import edu.bjut.aggprotocol.messages.RegMessage3;
 import edu.bjut.aggprotocol.messages.RepKeys;
 import edu.bjut.aggprotocol.messages.RepMessage;
+import edu.bjut.aggprotocol.messages.ShareBuMsg;
 import it.unisa.dia.gas.jpbc.Element;
 import it.unisa.dia.gas.jpbc.Pairing;
 import it.unisa.dia.gas.plaf.jpbc.pairing.PairingFactory;
@@ -42,13 +47,18 @@ public class ParameterServer {
     ArrayList<Element> allQi = new ArrayList<Element>();
     ArrayList<Element> allXi = new ArrayList<Element>();
 
-    private ArrayList<SecretShareBigInteger[]> allki = new ArrayList<SecretShareBigInteger[]>();
+    private List<SecretShareBigInteger[]> allki = new ArrayList<SecretShareBigInteger[]>();
+    private List<SecretShareBigInteger[]> allbu = new ArrayList<SecretShareBigInteger[]>();
+    private Map<Long, List<SecretShareBigInteger>> recoBuShare = new HashMap<>();
+
     private ArrayList<RepMessage> alRep = new ArrayList<RepMessage>();
     private ArrayList<RepKeys> alRepKeys = new ArrayList<RepKeys>();
 
     private boolean fails[];
     private int failNum;
     private StopWatch stopWatch = new StopWatch("server");
+
+    public BigVec aggResult;
 
     public ParameterServer() throws IOException {
         this.pairing = PairingFactory.getPairing("aggVote1.properties");
@@ -65,14 +75,12 @@ public class ParameterServer {
         this.failNum = failNum;
     }
 
-
     public ParamsECC getParamsECC() {
         ParamsECC ps = new ParamsECC(this.pairing, this.g);
         return ps;
     }
 
-    
-    /** 
+    /**
      * The first round in registration phase
      * 
      * @param reg
@@ -85,7 +93,6 @@ public class ParameterServer {
         this.stopWatch.stop();
     }
 
-    
     /**
      * The first round in registration phase
      * 
@@ -102,8 +109,7 @@ public class ParameterServer {
         return back;
     }
 
-    
-    /** 
+    /**
      * The second round in registration phase
      *
      * @param reg2
@@ -114,8 +120,7 @@ public class ParameterServer {
         this.stopWatch.stop();
     }
 
-    
-    /** 
+    /**
      * The second round in registration phase
      *
      * @param index
@@ -137,8 +142,7 @@ public class ParameterServer {
         return back;
     }
 
-    
-    /** 
+    /**
      * The third round in registration phase
      * 
      * @param reg2
@@ -149,7 +153,7 @@ public class ParameterServer {
         this.stopWatch.stop();
     }
 
-    /** 
+    /**
      * The third round in registration phase
      * 
      * @param reg2
@@ -176,26 +180,28 @@ public class ParameterServer {
         }
         this.stopWatch.start("sum_all");
         // if (false == checkingIncomeMessage()) {
-        //     LOG.warn("check failed at the server");
-        //     return res;
+        // LOG.warn("check failed at the server");
+        // return res;
         // }
-        res = genRepMessage(sumUpReportingData(), rep.getTi());
+        this.aggResult = sumUpReportingData();
+        res = genRepMessage(this.aggResult, rep.getTi());
         this.stopWatch.stop();
-        return res; 
+        return res;
     }
 
     public RepMessage getRepKeys(RepKeys rep) {
-        RepMessage res= null;
+        RepMessage res = null;
         alRepKeys.add(rep);
         if (alRepKeys.size() < Params.RECOVER_K) {
             return res;
         }
         this.stopWatch.start("sum_all");
         // if (false == checkingRepKeys()) {
-        //     System.out.println("check failed at the agg side");
-        //     return res;
+        // System.out.println("check failed at the agg side");
+        // return res;
         // }
-        res = genRepMessage(sumUpFailsData(), rep.getTi());
+        this.aggResult = sumUpFailsData();
+        res = genRepMessage(this.aggResult, rep.getTi());
         this.stopWatch.stop();
         return res;
     }
@@ -204,7 +210,8 @@ public class ParameterServer {
      * A meter report multiple types of data to aggregator at a time
      */
     public RepMessage genRepMessage(BigVec data, int count) {
-        // Element temEle = Utils.hash2ElementG1(data.toString() + id + count, this.pairing);
+        // Element temEle = Utils.hash2ElementG1(data.toString() + id + count,
+        // this.pairing);
         // Element si = temEle.duplicate().mul(this.dj);
         Element si = null;
         return new RepMessage(id, data, si, count);
@@ -489,6 +496,7 @@ public class ParameterServer {
         allKeys.clear();
         allXi.clear();
         allki.clear();
+        allbu.clear();
         allQi.clear();
     }
 
@@ -499,6 +507,38 @@ public class ParameterServer {
 
     public StopWatch getStopWatch() {
         return this.stopWatch;
+    }
+
+    public void getBuShares(ShareBuMsg msg) {
+        this.allbu.add(msg.getShares());
+    }
+
+    public List<SecretShareBigInteger> genBuShares(int i) {
+        List<SecretShareBigInteger> shares = new ArrayList<>();
+        for (var share : this.allbu) {
+            shares.add(share[i]);
+        }
+        return shares;
+    }
+
+    public void collectBuShares(int index, SecretShareBigInteger[] msgBuShares) {
+        for (int i = 0; i < msgBuShares.length; ++i) {
+            if (null != msgBuShares[i]) {
+                if (recoBuShare.get(Long.valueOf(i)) == null) recoBuShare.put((long) i, new ArrayList<>());
+                recoBuShare.get(Long.valueOf(i)).add(msgBuShares[i]);
+            }
+        }
+    }
+
+    public void aggregation() {
+
+        for (var e: this.recoBuShare.entrySet()) {
+            var v = e.getValue();
+            SecretShareBigInteger[] shares = new SecretShareBigInteger[v.size()];
+            var bu = Shamir.combine(v.toArray(shares), this.order);
+            this.aggResult = this.aggResult.subtract(BigVec.genPRGBigVec(bu.toString(), Params.G_SIZE));
+            LOG.info("shares: " + shares.length + ", client "+ e.getKey() +": "+ bu);
+        }
     }
 
 }
