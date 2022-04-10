@@ -29,7 +29,6 @@
     <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>
-      <version>1.0.13</version>
     </dependency>
     <dependency>
       <groupId>com.github.emilianobonassi</groupId>

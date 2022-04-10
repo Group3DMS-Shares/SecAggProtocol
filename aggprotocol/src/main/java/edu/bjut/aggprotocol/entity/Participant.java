@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,6 +25,7 @@ import edu.bjut.aggprotocol.messages.RegMessage2;
 import edu.bjut.aggprotocol.messages.RegMessage3;
 import edu.bjut.aggprotocol.messages.RepKeys;
 import edu.bjut.aggprotocol.messages.RepMessage;
+import edu.bjut.aggprotocol.messages.ShareBuMsg;
 import it.unisa.dia.gas.jpbc.Element;
 import it.unisa.dia.gas.jpbc.Pairing;
 
@@ -44,10 +46,12 @@ public class Participant {
     private Element g;
     private int count = 1;
 
-    ArrayList<Element> allQi = new ArrayList<Element>();
-    ArrayList<SecretShareBigInteger> alKi = new ArrayList<SecretShareBigInteger>();
+    List<Element> allQi = new ArrayList<Element>();
+    List<SecretShareBigInteger> alKi = new ArrayList<SecretShareBigInteger>();
+    List<SecretShareBigInteger> othersBu = new ArrayList<SecretShareBigInteger>();
 
-    private int gSize = 1;
+    private BigInteger bi = null;
+
     private StopWatch stopWatch;
 
     public Participant(ParamsECC ps) {
@@ -62,21 +66,6 @@ public class Participant {
         this.qi = this.g.pow(this.ki);
         this.stopWatch = new StopWatch("user_" + this.id);
     }
-
-    public Participant(ParamsECC ps, int gSize) throws IOException {
-        this.pairing = ps.getPairing();
-        this.g = ps.getGeneratorOfG1().getImmutable();
-        this.order = pairing.getG1().getOrder();
-
-        this.di = Utils.randomBig(order);
-        this.ki = Utils.randomBig(order);
-
-        this.ri = this.g.pow(this.di);
-        this.qi = this.g.pow(this.ki);
-        this.gSize = gSize;
-        this.stopWatch = new StopWatch("user_" + this.id);
-    }
-
 
     public RegMessage genRegMesssage() {
         this.stopWatch.start("register");
@@ -146,14 +135,15 @@ public class Participant {
     }
 
     private BigVec getEncryptedWeights() {
-        BigVec ci = BigVec.One(this.gSize);
+        BigVec ci = BigVec.One(Params.G_SIZE);
         BigVec pi = genPi();
+        BigVec bu = BigVec.genPRGBigVec(this.bi.toString(), Params.G_SIZE);
         LOG.debug("add pi");
         ci = ci.add(pi);
         BigInteger ni = Utils.hash2Big(Long.toString(this.k + this.count), this.order);
         LOG.debug("add ni: " + ni);
-        BigVec niVec = BigVec.genPRGBigVec(ni.toString(), this.gSize);
-        ci = ci.add(niVec);
+        BigVec niVec = BigVec.genPRGBigVec(ni.toString(), Params.G_SIZE);
+        ci = ci.add(niVec).add(bu);
         return ci;
     }
 
@@ -184,19 +174,19 @@ public class Participant {
     }
 
     private BigVec genPi() {
-        BigVec pi = BigVec.Zero(this.gSize);
+        BigVec pi = BigVec.Zero(Params.G_SIZE);
         int index = allQi.indexOf(this.qi);
         Element hr = Utils.hash2ElementG1(Integer.toString(count), pairing);
 
         for (int i = 0; i < index; i++) {
             Element tem = this.pairing.pairing(allQi.get(i), hr).getImmutable().mul(this.ki);
             LOG.debug(i + " add: " +tem.toBigInteger());
-            pi = pi.add(BigVec.genPRGBigVec(tem.toBigInteger().toString(), this.gSize));
+            pi = pi.add(BigVec.genPRGBigVec(tem.toBigInteger().toString(), Params.G_SIZE));
         }
         for (int i = index + 1; i < allQi.size(); i++) {
             Element tem = this.pairing.pairing(allQi.get(i), hr).getImmutable().mul(this.ki);
             LOG.debug(i + " subtract: " +tem.toBigInteger());
-            pi = pi.subtract(BigVec.genPRGBigVec(tem.toBigInteger().toString(), this.gSize));
+            pi = pi.subtract(BigVec.genPRGBigVec(tem.toBigInteger().toString(), Params.G_SIZE));
         }
         return pi;
     }
@@ -204,7 +194,7 @@ public class Participant {
     public void getRepMessageFails(RepMessage rep, int failNum) {
         this.stopWatch.start("agg_result");
         BigInteger ni = Utils.hash2Big(Long.toString(this.k + this.count), this.order);
-        BigVec niVec = BigVec.genPRGBigVec(ni.toString(), this.gSize);
+        BigVec niVec = BigVec.genPRGBigVec(ni.toString(), Params.G_SIZE);
         niVec = niVec.multiply(BigInteger.valueOf(this.allQi.size() - failNum));
         LOG.info("data: " + rep.getCi().subtract(niVec));
         this.stopWatch.stop();
@@ -212,6 +202,27 @@ public class Participant {
 
     public StopWatch getStopWatch() {
         return this.stopWatch;
+    }
+
+    public ShareBuMsg genBuMsg() {
+        this.bi = Utils.randomBig(this.order);
+        LOG.info(this.id + " :" + bi);
+        SecretShareBigInteger[] shares = Shamir.split(this.bi, Params.RECOVER_K, Params.PARTICIPANT_NUM, order, new SecureRandom());
+        return new ShareBuMsg(this.id, shares);
+    }
+
+    public void collectBuShares(List<SecretShareBigInteger> msg) {
+        this.othersBu = msg;
+    }
+
+    public SecretShareBigInteger[] sendBuShares(boolean[] fails) {
+        SecretShareBigInteger[] shares = new SecretShareBigInteger[fails.length];
+        for (int i = 0;  i <  shares.length; ++i) {
+            if (!fails[i]) {
+                shares[i] = this.othersBu.get(i);
+            }
+        }
+        return shares;
     }
 
 }

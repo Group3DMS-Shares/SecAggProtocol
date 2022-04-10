@@ -16,6 +16,7 @@ import edu.bjut.aggprotocol.messages.RegMessage2;
 import edu.bjut.aggprotocol.messages.RegMessage3;
 import edu.bjut.aggprotocol.messages.RepKeys;
 import edu.bjut.aggprotocol.messages.RepMessage;
+import edu.bjut.common.shamir.SecretShareBigInteger;
 import edu.bjut.common.util.Utils;
 
 public class ImproveAggregation {
@@ -71,12 +72,25 @@ public class ImproveAggregation {
 
     public void dataAggregation() {
         LOG.info("Start data aggregation.");
+
+
+        LOG.info("Gen share bu");
+        for (int i = 0; i < this.participants.size(); i++) {
+            var msg = this.participants.get(i).genBuMsg();
+            this.parameterServer.getBuShares(msg);
+        }
+
+        LOG.info("Distribute share bu");
+        for (int i = 0; i  < this.participants.size(); i++) {
+            var msg = this.parameterServer.genBuShares(i);
+            this.participants.get(i).collectBuShares(msg);
+        }
         RepMessage rep = null;
         // participant reports their data to the parameter server. 
         for (int i = 0; i < this.participants.size(); i++) {
             if (!this.fails[i]) {
-                RepMessage repMessage = participants.get(i).genRepMessage();
-                rep = parameterServer.getRepMessage(repMessage);
+                RepMessage repMessage = this.participants.get(i).genRepMessage();
+                rep = this.parameterServer.getRepMessage(repMessage);
             }
         }
 
@@ -91,11 +105,17 @@ public class ImproveAggregation {
                 }
             }
         }
-
+        LOG.info("Collect share bu");
+        for (int i = 0; i < this.participants.size(); ++i) {
+            SecretShareBigInteger[] msgBuShares = this.participants.get(i).sendBuShares(this.fails);
+            this.parameterServer.collectBuShares(i, msgBuShares);
+        }
+        this.parameterServer.aggregation();
         if (rep == null) {
             LOG.error("the num of user is smaller than recover threshold");
             return;
         }
+        rep.setCi(this.parameterServer.aggResult);
         // sends the recovered data back to participants
         for (int i = 0; i < this.participants.size(); ++i) {
             if (!this.fails[i]) {

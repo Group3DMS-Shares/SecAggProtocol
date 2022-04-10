@@ -25,4 +25,6 @@ public class Params {
     public static int UPBOUND_LIMIT_OF_METER_DATA = 1000; /* upper bound of a meter's reporting data */
     
     public static BigInteger smallMod = new BigInteger("1152921504606846976");
+    public static int G_SIZE = 1;
+
 }
