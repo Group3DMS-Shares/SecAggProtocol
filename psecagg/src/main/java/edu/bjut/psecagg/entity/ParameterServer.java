@@ -140,7 +140,7 @@ public class ParameterServer {
     }
 
     public BigVec outputZ() {
-        this.stopWatch.start("agg");
+        this.stopWatch.start("agg_1");
         int gSize = this.y_uList.get(0).size();
         BigVec sigmaX_u = BigVec.Zero(gSize);
         for (var x : y_uList) {
@@ -154,7 +154,8 @@ public class ParameterServer {
                 except.add(i);
             }
         }
-
+        this.stopWatch.stop();
+        this.stopWatch.start("agg_2");
         for (var e : buMap.entrySet()) {
             var k = e.getKey();
             var v = e.getValue();
@@ -165,7 +166,8 @@ public class ParameterServer {
             var puBigArray = prg.genBigs(gSize);
             pu = pu.add(new BigVec(puBigArray));
         }
-
+        this.stopWatch.stop();
+        this.stopWatch.start("agg_3");
         BigVec puv = BigVec.Zero(gSize);
         for (var e : svnMap.entrySet()) {
             long u = e.getKey();

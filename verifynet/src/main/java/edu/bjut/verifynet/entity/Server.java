@@ -174,47 +174,39 @@ public class Server {
         return omegaSnm;
     }
 
-    private BigInteger[] recoverBeta() {
-        BigInteger[] beta = new BigInteger[this.recoverBeta.size()];
-        int index = 0;
-        for (Long l : this.recoverBeta.keySet()) {
-            ArrayList<SecretShareBigInteger> betaShares = this.recoverBeta.get(l);
-            if (null != betaShares) {
-                SecretShareBigInteger[] shares = new SecretShareBigInteger[betaShares.size()];
-                BigInteger Beta = Shamir.combine(betaShares.toArray(shares), this.q);
-                beta[index++] = Beta;
-            }
-        }
-        return beta;
-    }
-
     public BigVec calculateOmeagXn() {
+        this.stopWatch.start("agg_1");
         int gLen = messageSigmasInServer.get(0).getX_n_hat().size();
         BigVec omegaXn = BigVec.Zero(gLen);
 
         for (MessageSigma mSigma: messageSigmasInServer) {
             omegaXn = omegaXn.add(mSigma.getX_n_hat());
         }
+        this.stopWatch.stop();
+        this.stopWatch.start("agg_2");
 
-        LOG.debug("sum: " + omegaXn);
-        
-        BigInteger[] omegaBeta = recoverBeta();
-        for (int i = 0; i < omegaBeta.length; ++i) {
-            LOG.debug("recover beta: " + omegaBeta[i]);
-            PRG prg = new PRG(omegaBeta[i].toString());
-            var x = new BigVec(prg.genBigs(gLen));
-            omegaXn = omegaXn.subtract(x);
-            LOG.debug("subtract beta: " + x);
+        for (var e: this.recoverBeta.entrySet()) {
+            var v = e.getValue();
+            SecretShareBigInteger[] shares = new SecretShareBigInteger[v.size()];
+            var puBig = Shamir.combine(v.toArray(shares), this.q);
+            LOG.debug("recoverBeta " + e.getKey() + " : " + puBig);
+            PRG prg = new PRG(puBig.toString());
+            var puBigArray = prg.genBigs(gLen);
+            omegaXn = omegaXn.add(new BigVec(puBigArray));
         }
+
+        this.stopWatch.stop();
+        this.stopWatch.start("agg_3");
         omegaXn = omegaXn.add(recoverSnm(gLen));
+        this.stopWatch.stop();
         return omegaXn;
     }
 
     public void broadcastToAggResultAndProof(ArrayList<User> users) {
-        this.stopWatch.start("agg_result");
+        // this.stopWatch.start("agg_result");
         var r = calculateOmeagXn();
         LOG.info("Aggregation Result: " + r);
-        this.stopWatch.stop();
+        // this.stopWatch.stop();
     }
 
     public boolean checkU1Count(int RECOVER_K) {
