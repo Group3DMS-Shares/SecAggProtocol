@@ -5,6 +5,7 @@ import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -205,9 +206,11 @@ public class Participant {
     }
 
     public ShareBuMsg genBuMsg() {
+        this.stopWatch.start("gen_bu_share");
         this.bi = Utils.randomBig(this.order);
         LOG.info(this.id + " :" + bi);
         SecretShareBigInteger[] shares = Shamir.split(this.bi, Params.RECOVER_K, Params.PARTICIPANT_NUM, order, new SecureRandom());
+        this.stopWatch.stop();
         return new ShareBuMsg(this.id, shares);
     }
 
@@ -216,13 +219,42 @@ public class Participant {
     }
 
     public SecretShareBigInteger[] sendBuShares(boolean[] fails) {
+        this.stopWatch.start("recover_bu");
         SecretShareBigInteger[] shares = new SecretShareBigInteger[fails.length];
         for (int i = 0;  i <  shares.length; ++i) {
             if (!fails[i]) {
                 shares[i] = this.othersBu.get(i);
             }
         }
+        this.stopWatch.stop();
         return shares;
+    }
+
+    public Element signFailList(boolean[] fails) {
+        this.stopWatch.start("consistency_sign");
+        StringBuilder failsString = new StringBuilder();
+        for (var b: fails) {
+            failsString.append(b);
+        }
+        var e = Utils.hash2ElementG1(failsString.toString(), pairing);
+        var sign = e.mul(this.ki);
+        this.stopWatch.stop();
+        return sign;
+    }
+
+    public void validate(Map<Integer, Element> signMap, boolean[] fails) {
+        this.stopWatch.start("consistency_validate");
+        StringBuilder failsString = new StringBuilder();
+        for (var b: fails) {
+            failsString.append(b);
+        }
+        for (var s: signMap.entrySet()) {
+            var e = Utils.hash2ElementG1(failsString.toString(), this.pairing);
+            var left = this.pairing.pairing(this.allQi.get(s.getKey()), e);
+            var right = this.pairing.pairing(s.getValue(), this.g);
+            assert(left.toString().equals(right.toString()));
+        }
+        this.stopWatch.stop();
     }
 
 }

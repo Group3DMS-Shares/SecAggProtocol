@@ -117,7 +117,7 @@ public class Participant {
     private boolean verify(String msg, Element pubKey, Element sigma_u) {
         LOG.debug("verify msg: " + msg);
         Element e = Utils.hash2ElementG1(msg, this.pairing);
-        Element right = this.pairing.pairing(sigma_u, g);
+        Element right = this.pairing.pairing(sigma_u, this.g);
         Element left = this.pairing.pairing(e.duplicate(), pubKey);
         LOG.debug("verify: " + left.toString() + " == " + right.toString());
         return left.toString().equals(right.toString());

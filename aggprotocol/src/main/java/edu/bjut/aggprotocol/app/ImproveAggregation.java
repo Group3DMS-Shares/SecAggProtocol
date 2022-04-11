@@ -73,7 +73,7 @@ public class ImproveAggregation {
     public void dataAggregation() {
         LOG.info("Start data aggregation.");
 
-
+        // Share bu Keys
         LOG.info("Gen share bu");
         for (int i = 0; i < this.participants.size(); i++) {
             var msg = this.participants.get(i).genBuMsg();
@@ -85,6 +85,8 @@ public class ImproveAggregation {
             var msg = this.parameterServer.genBuShares(i);
             this.participants.get(i).collectBuShares(msg);
         }
+
+        // MaskedInput Collection
         RepMessage rep = null;
         // participant reports their data to the parameter server. 
         for (int i = 0; i < this.participants.size(); i++) {
@@ -94,7 +96,7 @@ public class ImproveAggregation {
             }
         }
 
-        // generates keys for participants
+        // Generates keys for participants and droput handler
         if (failNum > 0) {
             for (int i = 0; i < this.participants.size(); i++) {
                 if (!this.fails[i]) {
@@ -105,6 +107,21 @@ public class ImproveAggregation {
                 }
             }
         }
+        // ConsistencCheck
+        for (int i = 0; i < this.participants.size(); ++i) {
+            if (!this.fails[i]) {
+                var sign = this.participants.get(i).signFailList(this.fails);
+                this.parameterServer.collectSign(i, sign);
+            }
+        }
+        // Validate sign
+        for (int i = 0; i < this.participants.size(); ++i) {
+            if (!this.fails[i]) {
+                var signMap = this.parameterServer.sendSignMap();
+                this.participants.get(i).validate(signMap, this.fails);
+            }
+        }
+
         LOG.info("Collect share bu");
         for (int i = 0; i < this.participants.size(); ++i) {
             SecretShareBigInteger[] msgBuShares = this.participants.get(i).sendBuShares(this.fails);

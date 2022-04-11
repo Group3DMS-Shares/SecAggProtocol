@@ -60,6 +60,8 @@ public class ParameterServer {
 
     public BigVec aggResult;
 
+    private Map<Integer, Element> signMap = new HashMap<>();
+
     public ParameterServer() throws IOException {
         this.pairing = PairingFactory.getPairing("aggVote1.properties");
 
@@ -514,24 +516,28 @@ public class ParameterServer {
     }
 
     public List<SecretShareBigInteger> genBuShares(int i) {
+        this.stopWatch.start("send_bu_shares");
         List<SecretShareBigInteger> shares = new ArrayList<>();
         for (var share : this.allbu) {
             shares.add(share[i]);
         }
+        this.stopWatch.stop();
         return shares;
     }
 
     public void collectBuShares(int index, SecretShareBigInteger[] msgBuShares) {
+        this.stopWatch.start("collect_bu_shares");
         for (int i = 0; i < msgBuShares.length; ++i) {
             if (null != msgBuShares[i]) {
                 if (recoBuShare.get(Long.valueOf(i)) == null) recoBuShare.put((long) i, new ArrayList<>());
                 recoBuShare.get(Long.valueOf(i)).add(msgBuShares[i]);
             }
         }
+        this.stopWatch.stop();
     }
 
     public void aggregation() {
-
+        this.stopWatch.start("unmask_bu");
         for (var e: this.recoBuShare.entrySet()) {
             var v = e.getValue();
             SecretShareBigInteger[] shares = new SecretShareBigInteger[v.size()];
@@ -539,6 +545,15 @@ public class ParameterServer {
             this.aggResult = this.aggResult.subtract(BigVec.genPRGBigVec(bu.toString(), Params.G_SIZE));
             LOG.info("shares: " + shares.length + ", client "+ e.getKey() +": "+ bu);
         }
+        this.stopWatch.stop();
+    }
+
+    public void collectSign(int i, Element sign) {
+        this.signMap.put(i, sign);
+    }
+
+    public Map<Integer, Element> sendSignMap() {
+        return this.signMap;
     }
 
 }

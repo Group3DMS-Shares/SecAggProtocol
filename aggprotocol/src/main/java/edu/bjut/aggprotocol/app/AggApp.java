@@ -35,7 +35,8 @@ public class AggApp {
             System.exit(0);
         }
         Params.PARTICIPANT_NUM = userNum;
-
+        Params.RECOVER_K = userNum / 2;
+        LOG.info("recovery threshold: " + Params.RECOVER_K);
         // system setup
         var parameterServer = new ParameterServer();
         List<Participant> participants = new ArrayList<>();
