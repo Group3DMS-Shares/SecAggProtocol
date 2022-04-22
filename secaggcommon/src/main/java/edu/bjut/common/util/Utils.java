@@ -133,9 +133,9 @@ public class Utils {
         return c;
     }
 
-    private static long count = 0;
+    private static int count = 0;
 
-    public static long incrementId() {
+    public static int incrementId() {
         return count++;
     }
 }

@@ -51,6 +51,7 @@ public class AggApp {
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
         // Round 0 (AdvertiseKeys)
+        // var msgResponse0 = aggregation.advertiseKeys();
         var msgResponse0 = aggregation.advertiseKeys();
         if (null == msgResponse0) throw new RuntimeException("smaller than share threshold");
 

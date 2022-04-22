@@ -4,10 +4,10 @@ import edu.bjut.common.shamir.SecretShareBigInteger;
 
 public class UShare {
 
-    private long id;
+    private int id;
     private SecretShareBigInteger uShare;
 
-    public long getId() {
+    public int getId() {
         return id;
     }
 
@@ -15,7 +15,7 @@ public class UShare {
         return uShare;
     }
 
-    public UShare(long id, SecretShareBigInteger uShare) {
+    public UShare(int id, SecretShareBigInteger uShare) {
         this.id = id;
         this.uShare = uShare;
     }

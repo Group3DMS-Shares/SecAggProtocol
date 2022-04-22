@@ -1,8 +1,8 @@
 package edu.bjut.psecagg.entity;
 
 public class CipherShare {
-    private long uId;
-    private long vId;
+    private int uId;
+    private int vId;
     private byte[] cUId;
     private byte[] cVId;
     private byte[] buNumber;
@@ -10,7 +10,7 @@ public class CipherShare {
     private byte[] suNumber;
     private byte[] suShare;
 
-    public CipherShare(long uId, long vId, byte[] cUId, byte[] cVId, byte[] buNumber, byte[] buShare, byte[] suNumber, byte[] suShare) {
+    public CipherShare(int uId, int vId, byte[] cUId, byte[] cVId, byte[] buNumber, byte[] buShare, byte[] suNumber, byte[] suShare) {
         this.uId = uId;
         this.vId = vId;
         this.cUId = cUId;
@@ -21,19 +21,19 @@ public class CipherShare {
         this.suShare = suShare;
     }
 
-    public long getuId() {
+    public int getuId() {
         return uId;
     }
 
-    public void setuId(long uId) {
+    public void setuId(int uId) {
         this.uId = uId;
     }
 
-    public long getvId() {
+    public int getvId() {
         return vId;
     }
 
-    public void setvId(long vId) {
+    public void setvId(int vId) {
         this.vId = vId;
     }
 

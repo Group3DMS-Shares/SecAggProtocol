@@ -10,8 +10,8 @@ import org.springframework.util.StopWatch;
 import java.util.HashMap;
 import java.util.List;
 
-import edu.bjut.psecagg.messages.MsgRound4;
 import edu.bjut.common.big.BigVec;
+import edu.bjut.common.util.Params;
 import edu.bjut.psecagg.entity.ParameterServer;
 import edu.bjut.psecagg.entity.Participant;
 import edu.bjut.psecagg.messages.*;
@@ -37,25 +37,30 @@ public class Aggregation {
     }
 
     public void distributeSignPubKeys() {
-        Map<Long, Element> keyMaps = new HashMap<>();
+        Map<Integer, Element> keyMaps = new HashMap<>();
         // collection sign public keys
         participants.forEach(x -> keyMaps.put(x.getId(), x.getDuPk()));
         // distribute to every one
         participants.forEach(x -> x.setSignPubKeys(keyMaps));
     }
 
-    public MsgResponseRound0 advertiseKeys() {
+    public List<MsgResponseRound0> advertiseKeys() {
         for (var p : participants) {
             MsgRound0 msgRound0 = p.sendMsgRound0();
             this.parameterServer.recvMsgRound0(msgRound0);
         }
-        MsgResponseRound0 msgResponseRound0 = this.parameterServer.sendMsgResponseRound0();
-        return msgResponseRound0;
+        List<MsgResponseRound0> msgRList = new ArrayList<>();
+        for (var p: participants) {
+            var respToClient = this.parameterServer.sendMsgResponseRound0(p.getId(), Params.KG_THRESHOLD);
+            if (null == respToClient) return null;
+            msgRList.add(respToClient);
+        }
+        return msgRList;
     }
 
-    public MsgResponseRound1 shareKeys(MsgResponseRound0 msgResponse) {
+    public MsgResponseRound1 shareKeys(List<MsgResponseRound0> msgResponses) {
         for (var p : this.participants) {
-            MsgRound1 msgRound1 = p.sendMsgRound1(msgResponse);
+            MsgRound1 msgRound1 = p.sendMsgRound1(msgResponses.get(p.getId()));
             this.parameterServer.recvMsgRound1(msgRound1);
         }
         return this.parameterServer.sendMsgResponseRound1();

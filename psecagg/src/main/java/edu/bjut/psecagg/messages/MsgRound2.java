@@ -3,10 +3,10 @@ package edu.bjut.psecagg.messages;
 import edu.bjut.common.big.BigVec;
 
 public class MsgRound2 {
-    private long id;
+    private int id;
     private BigVec y;
 
-    public MsgRound2(long id, BigVec y) {
+    public MsgRound2(int id, BigVec y) {
         this.id = id;
         this.y = y;
     }
@@ -19,11 +19,11 @@ public class MsgRound2 {
         this.y = y;
     }
 
-    public long getId() {
+    public int getId() {
         return id;
     }
 
-    public void setId(long id) {
+    public void setId(int id) {
         this.id = id;
     }
 }

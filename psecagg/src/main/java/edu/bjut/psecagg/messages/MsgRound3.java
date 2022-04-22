@@ -3,10 +3,10 @@ package edu.bjut.psecagg.messages;
 import it.unisa.dia.gas.jpbc.Element;
 
 public class MsgRound3 {
-    private long id;
+    private int id;
     private Element signature;
 
-    public MsgRound3(long id, Element signature) {
+    public MsgRound3(int id, Element signature) {
         this.id = id;
         this.signature = signature;
     }
@@ -15,11 +15,11 @@ public class MsgRound3 {
         return signature;
     }
 
-    public long getId() {
+    public int getId() {
         return id;
     }
 
-    public void setId(long id) {
+    public void setId(int id) {
         this.id = id;
     }
 }

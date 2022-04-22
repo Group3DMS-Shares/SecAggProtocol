@@ -6,10 +6,10 @@ import java.util.ArrayList;
 
 public class MsgRound1 {
 
-    private long id;
+    private int id;
     private ArrayList<CipherShare> ciperShares;
 
-    public MsgRound1(long id, ArrayList<CipherShare> ciperShares) {
+    public MsgRound1(int id, ArrayList<CipherShare> ciperShares) {
         this.id = id;
         this.ciperShares = ciperShares;
     }
@@ -22,11 +22,11 @@ public class MsgRound1 {
         this.ciperShares = ciperShares;
     }
 
-    public long getId() {
+    public int getId() {
         return id;
     }
 
-    public void setId(long id) {
+    public void setId(int id) {
         this.id = id;
     }
 

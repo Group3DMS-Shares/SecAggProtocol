@@ -20,8 +20,9 @@ public class Params {
     public static boolean fails[];
     public static int PARTICIPANT_FAILS = 1; /* number of smart meters */
     public static int ARRAY_OF_RECOVER_K[] = {1,2,3,4,5}; /* number of smart meters */
-    public static int RECOVER_K = 2; /* number of smart meters */
-    
+    public static int RECOVER_K = PARTICIPANT_NUM / 2 + 1; /* number of smart meters */
+    public static int KG_THRESHOLD = RECOVER_K + 2; /* number of smart meters */
+
     public static int UPBOUND_LIMIT_OF_METER_DATA = 1000; /* upper bound of a meter's reporting data */
     
     public static BigInteger smallMod = new BigInteger("1152921504606846976");

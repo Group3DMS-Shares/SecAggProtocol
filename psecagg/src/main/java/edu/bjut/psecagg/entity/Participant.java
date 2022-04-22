@@ -49,23 +49,23 @@ public class Participant {
     private BigVec x_u = BigVec.One(1);
     private int gSize = 1;
 
-    private final long id = Utils.incrementId();;
-    private Map<Long, Element> signPubKeys = new HashMap<>();
+    private final int id = Utils.incrementId();;
+    private Map<Integer, Element> signPubKeys = new HashMap<>();
     // round 0 keys
     private BigInteger cSk_u;
     private Element cPk_u;
     private BigInteger sSk_u;
     private Element sPk_u;
     // round 2
-    private Set<Long> u2ids = new HashSet<>();
+    private Set<Integer> u2ids = new HashSet<>();
     private BigInteger b_u;
     // every s^PK_u exclude self
-    private Map<Long, Element> sPubKeys = new HashMap<>();
+    private Map<Integer, Element> sPubKeys = new HashMap<>();
     // every c^PK_u exclude self
-    private Map<Long, Element> cPubKeys = new HashMap<>();
+    private Map<Integer, Element> cPubKeys = new HashMap<>();
     // round 3
-    private Set<Long> u3ids = new HashSet<>();
-    private Map<Long, CipherShare> cipherShareMap = new HashMap<>();
+    private Set<Integer> u3ids = new HashSet<>();
+    private Map<Integer, CipherShare> cipherShareMap = new HashMap<>();
     // time statistic
     private StopWatch stopWatch = new StopWatch("client");
 
@@ -92,15 +92,15 @@ public class Participant {
     }
 
 
-    public long getId() {
+    public int getId() {
         return id;
     }
 
-    public Map<Long, Element> getSignPubKeys() {
+    public Map<Integer, Element> getSignPubKeys() {
         return signPubKeys;
     }
 
-    public void setSignPubKeys(Map<Long, Element> signPubKeys) {
+    public void setSignPubKeys(Map<Integer, Element> signPubKeys) {
         this.signPubKeys = signPubKeys;
     }
 
@@ -108,7 +108,7 @@ public class Participant {
         return this.stopWatch;
     }
 
-    private boolean verifySign(long id, Element lcPk_u, Element lsPk_u, Element sigma_u) {
+    private boolean verifySign(int id, Element lcPk_u, Element lsPk_u, Element sigma_u) {
         LOG.debug("verify id: " + id);
         String msg = lcPk_u.toString() + lsPk_u.toString();
         return verify(msg, this.signPubKeys.get(id), sigma_u);
@@ -142,7 +142,7 @@ public class Participant {
         return new MsgRound0(this.id, this.cPk_u, this.sPk_u, sigma_u);
     }
 
-    public String getSymmetricKey(long vId) {
+    public String getSymmetricKey(int vId) {
         var encK = this.cPubKeys.get(vId).getImmutable().pow(this.cSk_u);
         LOG.debug("aes key (" + vId + ")v id: " + encK.toString());
         return encK.toString();
@@ -159,6 +159,10 @@ public class Participant {
             this.sPubKeys.put(m.getId(), m.getsPk_u());
             this.cPubKeys.put(m.getId(), m.getcPk_u());
         }
+        for (var e: msgResponse.getcPk_uMap().entrySet()) {
+            this.cPubKeys.putIfAbsent(e.getKey(), e.getValue());
+        }
+
         // sample b_u
         this.b_u = Utils.randomBig(order);
         LOG.info("beta: " + this.b_u);
@@ -171,7 +175,7 @@ public class Participant {
                 order, random);
 
         ArrayList<CipherShare> cipherShares = new ArrayList<>();
-        Iterator<Long> it = this.sPubKeys.keySet().iterator();
+        Iterator<Integer> it = this.cPubKeys.keySet().iterator();
         for (int i = 0; i < b_uShares.length; ++i) {
             var vId = it.next();
             try {
@@ -309,4 +313,5 @@ public class Participant {
         }
         return new UVShare(uId, vId, b_uShare, svuShare);
     }
+
 }

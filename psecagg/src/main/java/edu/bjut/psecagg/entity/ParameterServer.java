@@ -3,6 +3,7 @@ package edu.bjut.psecagg.entity;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import edu.bjut.common.shamir.SecretShareBigInteger;
@@ -32,17 +33,17 @@ public class ParameterServer {
     // Round 0
     private int u1Count = 0;
     private ArrayList<MsgRound0> msgRound0s = new ArrayList<>();
-    private Map<Long, Element> cPk_uMap = new HashMap<>();
-    private Map<Long, Element> sPk_uMap = new HashMap<>();
+    private Map<Integer, Element> cPk_uMap = new HashMap<>();
+    private Map<Integer, Element> sPk_uMap = new HashMap<>();
 
     // Round 1
     private int u2Count = 0;
-    private ArrayList<Long> u2ids = new ArrayList<>();
+    private ArrayList<Integer> u2ids = new ArrayList<>();
     private ArrayList<MsgRound1> allMsgRound1s = new ArrayList<>();
 
     // Round 2
     private int u3Count = 0;
-    private ArrayList<Long> u3Ids = new ArrayList<>();
+    private ArrayList<Integer> u3Ids = new ArrayList<>();
     private ArrayList<BigVec> y_uList = new ArrayList<>();
 
     // Round 3
@@ -50,8 +51,8 @@ public class ParameterServer {
     private ArrayList<MsgRound3> u4Sigmas = new ArrayList<>();
 
     // Round 4
-    Map<Long, ArrayList<SecretShareBigInteger>> buMap = new HashMap<>();
-    Map<Long, ArrayList<SecretShareBigInteger>> svnMap = new HashMap<>();
+    Map<Integer, ArrayList<SecretShareBigInteger>> buMap = new HashMap<>();
+    Map<Integer, ArrayList<SecretShareBigInteger>> svnMap = new HashMap<>();
     // Time statistic
     private StopWatch stopWatch = new StopWatch("server");
 
@@ -78,11 +79,20 @@ public class ParameterServer {
         this.stopWatch.stop();
     }
 
-    public MsgResponseRound0 sendMsgResponseRound0() {
+    public MsgResponseRound0 sendMsgResponseRound0(int id, int threshold) {
         this.u1Count = msgRound0s.size();
-        // TODO t-out-of-n check
-        assert (this.u1Count >= Params.RECOVER_K);
-        return new MsgResponseRound0(msgRound0s);
+        if (this.u1Count < Params.RECOVER_K) return null;
+
+        List<MsgRound0> msgToClient  = new ArrayList<>();
+        for (int i = 1; i < threshold / 2 + 1; ++i) {
+            int pre = (id - i + this.u1Count) % this.u1Count;
+            int post = (id + i) % this.u1Count;
+            msgToClient.add(msgRound0s.get(pre));
+            msgToClient.add(msgRound0s.get(post));
+        }
+        System.out.println();
+        MsgResponseRound0 msgResponseRound0 = new MsgResponseRound0(msgToClient, cPk_uMap);
+        return msgResponseRound0;
     }
 
     public void recvMsgRound1(MsgRound1 msgRound1) {
@@ -148,7 +158,7 @@ public class ParameterServer {
         }
         BigVec pu = BigVec.Zero(gSize);
 
-        ArrayList<Long> except = new ArrayList<>();
+        ArrayList<Integer> except = new ArrayList<>();
         for (var i : u2ids) {
             if (u3Ids.contains(i)) {
                 except.add(i);
@@ -170,10 +180,14 @@ public class ParameterServer {
         this.stopWatch.start("agg_3");
         BigVec puv = BigVec.Zero(gSize);
         for (var e : svnMap.entrySet()) {
-            long u = e.getKey();
+            int u = e.getKey();
             SecretShareBigInteger[] shares = new SecretShareBigInteger[e.getValue().size()];
             BigInteger key = Shamir.combine(e.getValue().toArray(shares), order);
             for (var v : except) {
+                int pre = (u - v + this.u1Count) % this.u1Count;
+                int post = (v - u + this.u1Count) % this.u1Count;
+
+                if (pre > Params.KG_THRESHOLD / 2 && post > Params.KG_THRESHOLD / 2) continue;
                 Element suv = this.sPk_uMap.get(v).getImmutable().mul(key);
                 BigInteger suvBig = Utils.hash2Big(suv.toString(), order);
                 LOG.debug(u + " to " + v + ": ");
