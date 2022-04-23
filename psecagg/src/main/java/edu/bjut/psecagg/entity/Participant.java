@@ -133,6 +133,8 @@ public class Participant {
         this.sSk_u = Utils.randomBig(order);
         this.sPk_u = this.g.pow(this.sSk_u).getImmutable();
         LOG.debug(this.id + ", private: " + this.sSk_u + ", public: " + this.sPk_u);
+        this.stopWatch.stop();
+        this.stopWatch.start("round0_send_sign");
         // sigma_u
         String msg = cPk_u.toString() + sPk_u.toString();
         LOG.info("sign msg: " + msg);
@@ -149,7 +151,7 @@ public class Participant {
     }
 
     public MsgRound1 sendMsgRound1(MsgResponseRound0 msgResponse) {
-        this.stopWatch.start("round1_send");
+        this.stopWatch.start("round1_send_verify");
         var msg = msgResponse.getPubKeys();
         for (var m : msg) {
             if (this.id == m.getId())
@@ -159,6 +161,8 @@ public class Participant {
             this.sPubKeys.put(m.getId(), m.getsPk_u());
             this.cPubKeys.put(m.getId(), m.getcPk_u());
         }
+        this.stopWatch.stop();
+        this.stopWatch.start("round1_send_keys");
         for (var e: msgResponse.getcPk_uMap().entrySet()) {
             this.cPubKeys.putIfAbsent(e.getKey(), e.getValue());
         }
@@ -252,7 +256,7 @@ public class Participant {
     }
 
     public MsgRound4 sendMsgRound4(MsgResponseRound3 msgResponse3) {
-        this.stopWatch.start("round4_send");
+        this.stopWatch.start("round4_verify");
         // verify
         for (var s : msgResponse3.getSigmas()) {
             StringBuilder stringBuilder = new StringBuilder();
@@ -263,6 +267,8 @@ public class Participant {
             }
 
         }
+        this.stopWatch.stop();
+        this.stopWatch.start("round4_send_shares");
 
         ArrayList<BetaShare> betaShares = new ArrayList<>();
         ArrayList<UShare> uShares = new ArrayList<>();
