@@ -35,6 +35,8 @@ public class AggApp {
             System.exit(0);
         }
         Params.PARTICIPANT_NUM = userNum;
+        Params.RECOVER_K = userNum / 2 + 1;
+        Params.KG_THRESHOLD = Params.RECOVER_K / 2 + Params.RECOVER_K % 2;
         LOG.info("Start secure aggregation protocol");
         // Setup system
         ParameterServer parameterServer= new ParameterServer();

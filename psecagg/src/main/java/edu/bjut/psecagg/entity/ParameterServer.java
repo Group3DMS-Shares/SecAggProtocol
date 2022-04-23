@@ -84,13 +84,12 @@ public class ParameterServer {
         if (this.u1Count < Params.RECOVER_K) return null;
 
         List<MsgRound0> msgToClient  = new ArrayList<>();
-        for (int i = 1; i < threshold / 2 + 1; ++i) {
+        for (int i = 1; i <= threshold; ++i) {
             int pre = (id - i + this.u1Count) % this.u1Count;
             int post = (id + i) % this.u1Count;
             msgToClient.add(msgRound0s.get(pre));
             msgToClient.add(msgRound0s.get(post));
         }
-        System.out.println();
         MsgResponseRound0 msgResponseRound0 = new MsgResponseRound0(msgToClient, cPk_uMap);
         return msgResponseRound0;
     }
@@ -187,7 +186,7 @@ public class ParameterServer {
                 int pre = (u - v + this.u1Count) % this.u1Count;
                 int post = (v - u + this.u1Count) % this.u1Count;
 
-                if (pre > Params.KG_THRESHOLD / 2 && post > Params.KG_THRESHOLD / 2) continue;
+                if (pre > Params.KG_THRESHOLD && post > Params.KG_THRESHOLD) continue;
                 Element suv = this.sPk_uMap.get(v).getImmutable().mul(key);
                 BigInteger suvBig = Utils.hash2Big(suv.toString(), order);
                 LOG.debug(u + " to " + v + ": ");
