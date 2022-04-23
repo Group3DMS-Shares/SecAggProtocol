@@ -49,7 +49,7 @@ public class Participant {
     private BigVec x_u = BigVec.One(1);
     private int gSize = 1;
 
-    private final int id = Utils.incrementId();;
+    private final int id = Utils.incrementId();
     private Map<Integer, Element> signPubKeys = new HashMap<>();
     // round 0 keys
     private BigInteger cSk_u;
@@ -67,7 +67,7 @@ public class Participant {
     private Set<Integer> u3ids = new HashSet<>();
     private Map<Integer, CipherShare> cipherShareMap = new HashMap<>();
     // time statistic
-    private StopWatch stopWatch = new StopWatch("client");
+    private final StopWatch stopWatch = new StopWatch("client");
 
     public Participant(ParamsECC ps) {
         this.pairing = ps.getPairing();
@@ -169,9 +169,9 @@ public class Participant {
 
         // generate shares for s^SK_u
         SecureRandom random = new SecureRandom();
-        SecretShareBigInteger[] b_uShares = Shamir.split(this.b_u, Params.RECOVER_K, Params.PARTICIPANT_NUM - 1, order,
+        SecretShareBigInteger[] b_uShares = Shamir.split(this.b_u, Params.RECOVER_K, Params.PARTICIPANT_NUM, order,
                 random);
-        SecretShareBigInteger[] sSk_uShares = Shamir.split(this.sSk_u, Params.RECOVER_K, Params.PARTICIPANT_NUM - 1,
+        SecretShareBigInteger[] sSk_uShares = Shamir.split(this.sSk_u, Params.RECOVER_K, Params.PARTICIPANT_NUM,
                 order, random);
 
         ArrayList<CipherShare> cipherShares = new ArrayList<>();
