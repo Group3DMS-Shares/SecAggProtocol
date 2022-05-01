@@ -163,12 +163,14 @@ public class Participant {
         // }
         var u1Count = msg.size();
         for (var m: msg) {
+            if (m.getId() == this.id)
+                continue;
             if (!verifySign(m.getId(), m.getcPk_u(), m.getsPk_u(), m.getSigma_u()))
                 throw new RuntimeException("Verify signature fail.");
+            this.cPubKeys.put(m.getId(), m.getcPk_u());
             int pre = (m.getId() - this.id + u1Count) % u1Count;
             int post = (this.id - m.getId() + u1Count) % u1Count;
-            this.cPubKeys.put(m.getId(), m.getcPk_u());
-            if (m.getId() != this.id && (pre <= Params.KG_THRESHOLD || post <= Params.KG_THRESHOLD)) {
+            if (pre <= Params.KG_THRESHOLD || post <= Params.KG_THRESHOLD) {
                 this.sPubKeys.put(m.getId(), m.getsPk_u());
             }
         }
@@ -188,7 +190,7 @@ public class Participant {
 
         ArrayList<CipherShare> cipherShares = new ArrayList<>();
         Iterator<Integer> it = this.cPubKeys.keySet().iterator();
-        for (int i = 0; i < b_uShares.length; ++i) {
+        for (int i = 0; i < b_uShares.length - 1; ++i) {
             var vId = it.next();
             try {
                 // generate symmetric key and aes encrypt

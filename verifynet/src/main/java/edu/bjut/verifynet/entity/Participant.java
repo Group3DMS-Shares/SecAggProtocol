@@ -150,8 +150,8 @@ public class Participant {
                 continue;
             // if (!verifySign(m.getId(), m.getcPk_u(), m.getsPk_u(), m.getSigma_u()))
             //     throw new RuntimeException("Verify signature fail.");
-            this.sPubKeys.put(m.getId(), m.getsPk_u());
             this.cPubKeys.put(m.getId(), m.getcPk_u());
+            this.sPubKeys.put(m.getId(), m.getsPk_u());
         }
         // sample b_u
         this.b_u = Utils.randomBig(order);
@@ -159,14 +159,14 @@ public class Participant {
 
         // generate shares for s^SK_u
         SecureRandom random = new SecureRandom();
-        SecretShareBigInteger[] b_uShares = Shamir.split(this.b_u, Params.RECOVER_K, Params.PARTICIPANT_NUM - 1, order,
+        SecretShareBigInteger[] b_uShares = Shamir.split(this.b_u, Params.RECOVER_K, Params.PARTICIPANT_NUM, order,
                 random);
-        SecretShareBigInteger[] sSk_uShares = Shamir.split(this.sSk_u, Params.RECOVER_K, Params.PARTICIPANT_NUM - 1,
+        SecretShareBigInteger[] sSk_uShares = Shamir.split(this.sSk_u, Params.RECOVER_K, Params.PARTICIPANT_NUM,
                 order, random);
 
         ArrayList<CipherShare> cipherShares = new ArrayList<>();
         Iterator<Long> it = this.sPubKeys.keySet().iterator();
-        for (int i = 0; i < b_uShares.length; ++i) {
+        for (int i = 0; i < b_uShares.length - 1; ++i) {
             var vId = it.next();
             try {
                 // generate symmetric key and aes encrypt

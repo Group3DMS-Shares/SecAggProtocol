@@ -9,3 +9,19 @@ dependencies {
 application {
     mainClass = 'edu.bjut.verifynet.app.VerifyNetApp'
 }
+
+jar {
+    dependsOn(':secaggcommon:jar')
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    manifest {
+        attributes(
+                'Main-Class': 'edu.bjut.verifynet.app.VerifyNetApp'
+        )
+    }
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+    {
+        exclude 'META-INF/*.RSA', 'META-INF/*.SF', 'META-INF/*.DSA'
+    }
+}
