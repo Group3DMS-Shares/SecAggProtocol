@@ -1,8 +1,9 @@
-package edu.bjut.psecagg.app;
+package edu.bjut.aaia.app;
 
 import java.util.ArrayList;
 import java.util.Map;
 
+import edu.bjut.aaia.messages.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.StopWatch;
@@ -10,19 +11,17 @@ import org.springframework.util.StopWatch;
 import java.util.HashMap;
 import java.util.List;
 
-import edu.bjut.psecagg.messages.MsgRound4;
 import edu.bjut.common.big.BigVec;
-import edu.bjut.psecagg.entity.ParameterServer;
-import edu.bjut.psecagg.entity.Participant;
-import edu.bjut.psecagg.messages.*;
+import edu.bjut.aaia.entity.ParameterServer;
+import edu.bjut.aaia.entity.Participant;
 import it.unisa.dia.gas.jpbc.Element;
 
 public class Aggregation {
 
-    private final Logger LOG = LoggerFactory.getLogger(Aggregation.class);
+    private Logger LOG = LoggerFactory.getLogger(Aggregation.class);
 
-    private final ParameterServer parameterServer;
-    private final ArrayList<Participant> participants;
+    private ParameterServer parameterServer;
+    private ArrayList<Participant> participants;
     private int failNum = 0;
 
     public Aggregation(ParameterServer parameterServer, ArrayList<Participant> participants) {
@@ -37,7 +36,7 @@ public class Aggregation {
     }
 
     public void distributeSignPubKeys() {
-        Map<Long, Element> keyMaps = new HashMap<>();
+        Map<Integer, Element> keyMaps = new HashMap<>();
         // collection sign public keys
         participants.forEach(x -> keyMaps.put(x.getId(), x.getDuPk()));
         // distribute to every one
@@ -52,9 +51,18 @@ public class Aggregation {
         return this.parameterServer.sendMsgResponseRound0();
     }
 
-    public MsgResponseRound1 shareKeys(MsgResponseRound0 msgResponse) {
+    public MsgResponseRound1 shareKeys(List<MsgResponseRound0> msgResponses) {
         for (var p : this.participants) {
-            MsgRound1 msgRound1 = p.sendMsgRound1(msgResponse);
+            MsgRound1 msgRound1 = p.sendMsgRound1(msgResponses.get(p.getId()));
+            this.parameterServer.recvMsgRound1(msgRound1);
+        }
+        return this.parameterServer.sendMsgResponseRound1();
+    }
+
+
+    public MsgResponseRound1 shareKeys(MsgResponseRound0 msgResponse0) {
+        for (var p : this.participants) {
+            MsgRound1 msgRound1 = p.sendMsgRound1(msgResponse0);
             this.parameterServer.recvMsgRound1(msgRound1);
         }
         return this.parameterServer.sendMsgResponseRound1();
@@ -105,20 +113,21 @@ public class Aggregation {
         int len = taskInfos.length;
         StringBuilder headBuilder = new StringBuilder();
         for (int i = 0; i < len; ++i) {
-            headBuilder.append(taskInfos[i].getTaskName());
+            headBuilder = headBuilder.append(taskInfos[i].getTaskName());
             if (i != len - 1) {
-                headBuilder.append(",");
+                headBuilder = headBuilder.append(",");
             }
         }
         StringBuilder timeBuilder = new StringBuilder();
         for (int i = 0; i < len; ++i) {
-            timeBuilder.append(taskInfos[i].getTimeMillis());
+            timeBuilder = timeBuilder.append(taskInfos[i].getTimeMillis());
             if (i != len - 1) {
-                timeBuilder.append(",");
+                timeBuilder = timeBuilder.append(",");
             }
         }
         LOG.warn(headBuilder.toString());
         LOG.warn(timeBuilder.toString());
         return stopWatch.getTotalTimeMillis();
     }
+
 }

@@ -2,12 +2,12 @@ package edu.bjut.secaggcommon;
 
 import java.math.BigInteger;
 
-import org.junit.Test;
 
 import edu.bjut.common.util.Utils;
 import it.unisa.dia.gas.jpbc.Element;
 import it.unisa.dia.gas.jpbc.Pairing;
 import it.unisa.dia.gas.plaf.jpbc.pairing.PairingFactory;
+import org.junit.jupiter.api.Test;
 
 /**
  * Unit test for simple App.

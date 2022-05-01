@@ -1,6 +1,5 @@
 package edu.bjut.secaggcommon;
 
-import static org.junit.Assert.assertEquals;
 
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
@@ -8,9 +7,11 @@ import javax.crypto.spec.SecretKeySpec;
 
 import org.bouncycastle.crypto.Digest;
 import org.bouncycastle.crypto.digests.SHA256Digest;
-import org.junit.Test;
 
 import edu.bjut.common.aes.AesCipher;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class EncryptTest {
 

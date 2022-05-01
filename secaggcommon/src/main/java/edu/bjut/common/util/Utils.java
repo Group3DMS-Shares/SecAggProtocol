@@ -13,7 +13,7 @@ public class Utils {
     /**
      * Hashing 2 a big number mod by a public parameter
      *
-     * @param input String id, BigInteger xi, Element ci, BigInteger di, long ti
+     * @param orgStr String id, BigInteger xi, Element ci, BigInteger di, long ti
      * @return BigInteger
      */
     public static BigInteger hash2Big(String orgStr, BigInteger order) {
@@ -25,7 +25,6 @@ public class Utils {
     /**
      * generate a random long identity
      *
-     * @param input null
      * @return long
      */
     public static long randomlong() {
@@ -38,21 +37,20 @@ public class Utils {
     /**
      * generate a random int number that is less than 999
      *
-     * @param input null
+     * @param num null
      * @return int
      */
     public static int randomInt(int num) {
         Random rnd = new Random();
         long seed = System.nanoTime();
         rnd.setSeed(seed);
-        int result = rnd.nextInt(num);
-        return result;
+        return rnd.nextInt(num);
     }
 
     /**
      * generate a random int number that is less than 999
      *
-     * @param input null
+     * @param fail null
      * @return int
      */
     public static boolean[] setFailedParticipants(int fail, int length) {
@@ -75,20 +73,19 @@ public class Utils {
     /**
      * Hashing a string to an Element in the Elliptic Curve
      *
-     * @param input String originalString
+     * @param originalString String originalString
      * @return Element Element of G1
      */
     public static Element hash2ElementG1(String originalString, Pairing pairing) {
         byte[] oiginalBytes = originalString.getBytes(StandardCharsets.UTF_8);
-        Element result = pairing.getG1().newElementFromHash(oiginalBytes, 0, oiginalBytes.length);
-        return result;
+        return pairing.getG1().newElementFromHash(oiginalBytes, 0, oiginalBytes.length);
     }
 
 
     /**
      * generate a random long identity
      *
-     * @param input null
+     * @param mod null
      * @return long
      */
     public static BigInteger randomBig(BigInteger mod) {
@@ -103,7 +100,6 @@ public class Utils {
     /**
      * generate a random long identity
      *
-     * @param input null
      * @return long
      */
     public static BigInteger randomFai() {
@@ -133,9 +129,9 @@ public class Utils {
         return c;
     }
 
-    private static long count = 0;
+    private static int count = 0;
 
-    public static long incrementId() {
+    public static int incrementId() {
         return count++;
     }
 }

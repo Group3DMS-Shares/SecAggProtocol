@@ -1,17 +1,18 @@
 package edu.bjut.secaggcommon;
 
-import org.junit.Test;
 
 import edu.bjut.common.big.BigVec;
 import edu.bjut.common.util.PRG;
+import org.junit.jupiter.api.Test;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 
 public class RandomBigTest {
 

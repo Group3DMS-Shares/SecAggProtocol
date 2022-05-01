@@ -1,0 +1,11 @@
+plugins {
+    id 'app-convention'
+}
+
+dependencies {
+    implementation project(':secaggcommon')
+}
+
+application {
+    mainClass = 'edu.bjut.psecagg.app.AggApp'
+}

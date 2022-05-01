@@ -1,0 +1,4 @@
+plugins {
+    id 'secagg-common-convention'
+    id 'java-library'
+}

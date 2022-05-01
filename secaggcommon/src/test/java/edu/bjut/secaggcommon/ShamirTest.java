@@ -1,11 +1,10 @@
 package edu.bjut.secaggcommon;
 
-import static org.junit.Assert.assertTrue;
 
 import java.math.BigInteger;
 import java.security.SecureRandom;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.util.StopWatch;
 
 import edu.bjut.common.shamir.SecretShare;
@@ -14,6 +13,8 @@ import edu.bjut.common.shamir.Shamir;
 import it.unisa.dia.gas.jpbc.Element;
 import it.unisa.dia.gas.jpbc.Pairing;
 import it.unisa.dia.gas.plaf.jpbc.pairing.PairingFactory;
+
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class ShamirTest {
     

@@ -1,0 +1,3 @@
+rootProject.name = 'SecAgg'
+include ('aaia', 'psecagg', 'verifynet', 'secaggcommon')
+
