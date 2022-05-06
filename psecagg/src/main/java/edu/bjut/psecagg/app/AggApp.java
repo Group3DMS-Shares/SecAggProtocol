@@ -8,7 +8,6 @@ import org.springframework.util.StopWatch;
 
 import edu.bjut.common.big.BigVec;
 import edu.bjut.common.messages.ParamsECC;
-import edu.bjut.common.util.Params;
 import edu.bjut.psecagg.entity.ParameterServer;
 import edu.bjut.psecagg.entity.Participant;
 import net.sourceforge.argparse4j.ArgumentParsers;
@@ -19,7 +18,7 @@ public class AggApp {
 
     static final Logger LOG = LoggerFactory.getLogger(AggApp.class);
 
-    public static void main(String args[])  { 
+    public static void main(String[] args)  {
         // args setting
         ArgumentParser parser = ArgumentParsers.newFor("Params Setting").build().defaultHelp(true)
                 .description("experiment setting: user number, failure number, gradient number");
@@ -34,15 +33,14 @@ public class AggApp {
             parser.printHelp();
             System.exit(0);
         }
-        Params.PARTICIPANT_NUM = userNum;
         LOG.info("Start secure aggregation protocol");
         // Setup system
-        ParameterServer parameterServer= new ParameterServer();
+        ParameterServer parameterServer= new ParameterServer(userNum);
         ArrayList<Participant> participants = new ArrayList<>();
         ParamsECC paramsECC = parameterServer.getParamsECC();
-        for (int i = 0; i < Params.PARTICIPANT_NUM; i++) {
+        for (int i = 0; i < userNum; i++) {
             // generate secret key and public key for each user
-            participants.add(new Participant(paramsECC, gNum));
+            participants.add(new Participant(paramsECC, gNum, userNum));
         }
         Aggregation aggregation = new Aggregation(parameterServer, participants, failNum);
 

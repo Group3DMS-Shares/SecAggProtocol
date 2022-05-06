@@ -97,17 +97,19 @@ public class Utils {
         return ranBig;
     }
 
+    static BigInteger smallMod = new BigInteger("1152921504606846976");
     /**
      * generate a random long identity
      *
      * @return long
      */
     public static BigInteger randomFai() {
+
         Random rnd = new Random();
         long seed = System.nanoTime();
         rnd.setSeed(seed);
         BigInteger ranBig = new BigInteger(61, rnd);
-        ranBig = ranBig.mod(Params.smallMod);
+        ranBig = ranBig.mod(Utils.smallMod);
         return ranBig;
     }
 

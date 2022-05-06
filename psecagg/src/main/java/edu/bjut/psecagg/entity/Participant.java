@@ -21,7 +21,6 @@ import edu.bjut.common.big.BigVec;
 import edu.bjut.common.messages.ParamsECC;
 import edu.bjut.common.shamir.SecretShareBigInteger;
 import edu.bjut.common.shamir.Shamir;
-import edu.bjut.common.util.Params;
 import edu.bjut.common.util.Utils;
 import edu.bjut.psecagg.messages.MsgResponseRound0;
 import edu.bjut.psecagg.messages.MsgResponseRound1;
@@ -45,6 +44,8 @@ public class Participant {
     // for signature
     private final BigInteger duSk;
     private final Element duPk;
+    private final int userNum;
+    private final int recoverThreshold;
     // gradient
     private BigVec x_u = BigVec.One(1);
     private int gSize = 1;
@@ -69,15 +70,7 @@ public class Participant {
     // time statistic
     private StopWatch stopWatch = new StopWatch("client");
 
-    public Participant(ParamsECC ps) {
-        this.pairing = ps.getPairing();
-        this.g = ps.getGeneratorOfG1().getImmutable();
-        this.order = pairing.getG1().getOrder();
-        this.duSk = Utils.randomBig(order);
-        this.duPk = this.g.pow(this.duSk);
-    }
-
-    public Participant(ParamsECC ps, int gSize) {
+    public Participant(ParamsECC ps, int gSize, int userNum) {
         this.pairing = ps.getPairing();
         this.g = ps.getGeneratorOfG1().getImmutable();
         this.order = pairing.getG1().getOrder();
@@ -85,6 +78,8 @@ public class Participant {
         this.duPk = this.g.pow(this.duSk);
         this.gSize = gSize;
         this.x_u = BigVec.One(gSize);
+        this.userNum = userNum;
+        this.recoverThreshold = userNum / 2 + 1;
     }
 
     public Element getDuPk() {
@@ -133,6 +128,8 @@ public class Participant {
         this.sSk_u = Utils.randomBig(order);
         this.sPk_u = this.g.pow(this.sSk_u).getImmutable();
         LOG.debug(this.id + ", private: " + this.sSk_u + ", public: " + this.sPk_u);
+        this.stopWatch.stop();
+        this.stopWatch.start("round0_send_sign");
         // sigma_u
         String msg = cPk_u.toString() + sPk_u.toString();
         LOG.info("sign msg: " + msg);
@@ -149,7 +146,7 @@ public class Participant {
     }
 
     public MsgRound1 sendMsgRound1(MsgResponseRound0 msgResponse) {
-        this.stopWatch.start("round1_send");
+        this.stopWatch.start("round1_send_verify");
         var msg = msgResponse.getPubKeys();
         for (var m : msg) {
             if (this.id == m.getId())
@@ -159,15 +156,17 @@ public class Participant {
             this.sPubKeys.put(m.getId(), m.getsPk_u());
             this.cPubKeys.put(m.getId(), m.getcPk_u());
         }
+        this.stopWatch.stop();
+        this.stopWatch.start("round1_send_keys");
         // sample b_u
         this.b_u = Utils.randomBig(order);
         LOG.info("beta: " + this.b_u);
 
         // generate shares for s^SK_u
         SecureRandom random = new SecureRandom();
-        SecretShareBigInteger[] b_uShares = Shamir.split(this.b_u, Params.RECOVER_K, Params.PARTICIPANT_NUM, order,
+        SecretShareBigInteger[] b_uShares = Shamir.split(this.b_u, this.recoverThreshold, this.userNum, order,
                 random);
-        SecretShareBigInteger[] sSk_uShares = Shamir.split(this.sSk_u, Params.RECOVER_K, Params.PARTICIPANT_NUM,
+        SecretShareBigInteger[] sSk_uShares = Shamir.split(this.sSk_u, this.recoverThreshold, this.userNum,
                 order, random);
 
         ArrayList<CipherShare> cipherShares = new ArrayList<>();

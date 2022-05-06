@@ -4,7 +4,6 @@ import edu.bjut.aaia.entity.ParameterServer;
 import edu.bjut.aaia.entity.Participant;
 import edu.bjut.common.big.BigVec;
 import edu.bjut.common.messages.ParamsECC;
-import edu.bjut.common.util.Params;
 import net.sourceforge.argparse4j.ArgumentParsers;
 import net.sourceforge.argparse4j.inf.ArgumentParser;
 import net.sourceforge.argparse4j.inf.Namespace;
@@ -18,7 +17,7 @@ public  class AAIAApp {
 
     static final Logger LOG = LoggerFactory.getLogger(AAIAApp.class);
 
-    public static void main(String args[])  { 
+    public static void main(String[] args)  {
         // args setting
         ArgumentParser parser = ArgumentParsers.newFor("Params Setting").build().defaultHelp(true)
                 .description("experiment setting: user number, failure number, gradient number");
@@ -33,17 +32,14 @@ public  class AAIAApp {
             parser.printHelp();
             System.exit(0);
         }
-        Params.PARTICIPANT_NUM = userNum;
-        Params.RECOVER_K = userNum / 2 + 1;
-        Params.KG_THRESHOLD = Params.RECOVER_K / 2 + Params.RECOVER_K % 2;
         LOG.info("Start secure aggregation protocol");
         // Setup system
-        ParameterServer parameterServer= new ParameterServer();
+        ParameterServer parameterServer= new ParameterServer(userNum);
         ArrayList<Participant> participants = new ArrayList<>();
         ParamsECC paramsECC = parameterServer.getParamsECC();
-        for (int i = 0; i < Params.PARTICIPANT_NUM; i++) {
+        for (int i = 0; i < userNum; i++) {
             // generate secret key and public key for each user
-            participants.add(new Participant(paramsECC, gNum));
+            participants.add(new Participant(paramsECC, gNum, userNum));
         }
         Aggregation aggregation = new Aggregation(parameterServer, participants, failNum);
 

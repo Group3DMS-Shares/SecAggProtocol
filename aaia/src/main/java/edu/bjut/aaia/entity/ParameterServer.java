@@ -3,7 +3,6 @@ package edu.bjut.aaia.entity;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import edu.bjut.aaia.messages.*;
@@ -12,7 +11,6 @@ import edu.bjut.common.shamir.Shamir;
 import edu.bjut.common.big.BigVec;
 import edu.bjut.common.messages.ParamsECC;
 import edu.bjut.common.util.PRG;
-import edu.bjut.common.util.Params;
 import edu.bjut.common.util.Utils;
 import it.unisa.dia.gas.jpbc.Element;
 import it.unisa.dia.gas.jpbc.Pairing;
@@ -24,6 +22,8 @@ import org.springframework.util.StopWatch;
 public class ParameterServer {
 
     static final Logger LOG = LoggerFactory.getLogger(ParameterServer.class);
+    private final int recoverThreshold;
+    private final int kThreshold;
 
     // pairing parameters
     private Pairing pairing;
@@ -56,10 +56,12 @@ public class ParameterServer {
     // Time statistic
     private StopWatch stopWatch = new StopWatch("server");
 
-    public ParameterServer() {
+    public ParameterServer(int userNum) {
         this.pairing = PairingFactory.getPairing("aggVote1.properties");
         this.order = pairing.getG1().getOrder();
         this.g = this.pairing.getG1().newRandomElement().getImmutable();
+        this.recoverThreshold = userNum / 2 + 1;
+        this.kThreshold = this.recoverThreshold / 2 + this.recoverThreshold % 2;
     }
 
     public StopWatch getStopWatch() {
@@ -81,7 +83,7 @@ public class ParameterServer {
 
     public MsgResponseRound0 sendMsgResponseRound0() {
         this.u1Count = msgRound0s.size();
-        if (this.u1Count < Params.RECOVER_K) return null;
+        if (this.u1Count < this.recoverThreshold) return null;
 
         // List<MsgRound0> msgToClient  = new ArrayList<>();
         // for (int i = 1; i <= threshold; ++i) {
@@ -103,7 +105,7 @@ public class ParameterServer {
 
     public MsgResponseRound1 sendMsgResponseRound1() {
         this.u2Count = this.allMsgRound1s.size();
-        assert (this.u2Count >= Params.RECOVER_K);
+        assert (this.u2Count >= this.recoverThreshold);
         return new MsgResponseRound1(this.allMsgRound1s);
     }
 
@@ -114,7 +116,7 @@ public class ParameterServer {
 
     public MsgResponseRound2 sendMsgResponseRound2() {
         this.u3Count = this.u3Ids.size();
-        assert (this.u3Count >= Params.RECOVER_K);
+        assert (this.u3Count >= this.recoverThreshold);
         return new MsgResponseRound2(u3Ids);
     }
 
@@ -126,7 +128,7 @@ public class ParameterServer {
 
     public MsgResponseRound3 sendMsgResponseRound3() {
         this.u4Count = this.u4Sigmas.size();
-        assert (this.u4Count >= Params.RECOVER_K);
+        assert (this.u4Count >= this.recoverThreshold);
         return new MsgResponseRound3(this.u4Sigmas);
     }
 
@@ -183,7 +185,7 @@ public class ParameterServer {
                 int pre = (u - v + this.u1Count) % this.u1Count;
                 int post = (v - u + this.u1Count) % this.u1Count;
 
-                if (pre > Params.KG_THRESHOLD && post > Params.KG_THRESHOLD) continue;
+                if (pre > this.kThreshold && post > this.kThreshold) continue;
                 Element suv = this.sPk_uMap.get(v).getImmutable().mul(key);
                 BigInteger suvBig = Utils.hash2Big(suv.toString(), order);
                 LOG.debug(u + " to " + v + ": ");
